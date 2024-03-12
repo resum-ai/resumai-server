@@ -11,7 +11,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: resumai.settings.prod
     env_file:
-      - #작성
+      - .env
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media

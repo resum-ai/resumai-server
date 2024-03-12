@@ -5,3 +5,4 @@ resumai/__pycache__/*
 *.pyc
 
 .env
+.env.prod
