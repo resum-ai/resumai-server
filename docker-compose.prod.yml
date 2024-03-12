@@ -15,20 +15,20 @@ services:
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
-    expose:
-      - #작성
+#    expose:
+#      - #작성
     entrypoint:
       - sh
       - config/docker/entrypoint.prod.sh
 
   nginx:
     container_name: nginx
-    build: #작성
+#    build: #작성
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
-    ports:
-      - #작성
+#    ports:
+#      - #작성
     depends_on:
       - web
 
