@@ -23,7 +23,9 @@ services:
 
   nginx:
     container_name: nginx
-#    build: #작성
+    build:
+      context: ./config/nginx
+      dockerfile: Dockerfile
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
