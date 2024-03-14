@@ -6,3 +6,5 @@ resumai/__pycache__/*
 
 .env
 .env.prod
+
+.DS_Store
