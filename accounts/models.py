@@ -13,22 +13,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )  # 카카오 user_id
 
     position = models.CharField(max_length=100, null=True, blank=True)
-    direct_number = models.IntegerField(null=True, blank=True)
     profile_image = models.URLField(max_length=200, blank=True)
-
-    STATUS_APPROVED = "approved"
-    STATUS_PENDING = "pending"
-    STATUS_REJECTED = "rejected"
-
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            (STATUS_APPROVED, "Approved"),
-            (STATUS_PENDING, "Pending"),
-            (STATUS_REJECTED, "Rejected"),
-        ],
-        default=STATUS_PENDING,
-    )
 
     is_staff = models.BooleanField(default=False)  # 슈퍼유저 권한
     is_superuser = models.BooleanField(default=False)

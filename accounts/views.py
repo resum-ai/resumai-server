@@ -17,7 +17,7 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
 from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
 
-env_file_path = Path(__file__).resolve().parent.parent / 'breakserver' / 'settings' / '.env'
+env_file_path = Path(__file__).resolve().parent.parent / '.env.prod'
 env = environ.Env()
 environ.Env.read_env(env_file_path)
 
@@ -104,7 +104,6 @@ def kakao_callback(request):
                 username=username,
                 profile_image=profile_image_url,
                 position=None,
-                direct_number=None,
                 status="Pending",
             )
 
@@ -141,7 +140,6 @@ class UpdateUserInfoView(APIView):
         new_username = request.data.get("username")
         new_profile_image = request.data.get("profile_image")
         new_position = request.data.get("position")
-        new_direct_number = request.data.get("direct_number")
         new_status = request.data.get("status")
 
         # 유저 데이터 비교
@@ -150,9 +148,6 @@ class UpdateUserInfoView(APIView):
             new_profile_image if new_profile_image is not None else user.profile_image
         )
         user.position = new_position if new_position is not None else user.position
-        user.direct_number = (
-            new_direct_number if new_direct_number is not None else user.direct_number
-        )
         user.status = new_status if new_status is not None else user.status
         user.save()
 

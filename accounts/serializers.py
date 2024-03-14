@@ -28,11 +28,11 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("username", "position", "direct_number", "profile_image", "status")
+        fields = ("username", "position", "profile_image")
 
 
 class GetUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "position", "direct_number", "profile_image", "status")
+        fields = ("id", "username", "position", "profile_image")
 
