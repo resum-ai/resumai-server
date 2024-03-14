@@ -19,16 +19,12 @@ services:
 
   web:
     container_name: web
-    build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    environment:
-      MYSQL_ROOT_PASSWORD: mysql
-      DATABASE_NAME: mysql
-      DATABASE_USER: 'root'
-      DATABASE_PASSWORD: mysql
-      DATABASE_PORT: 3306
-      DATABASE_HOST: db
-      DJANGO_SETTINGS_MODULE: resumai.settings.dev
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --settings=resumai.settings.dev"
+    env_file:
+      - .env
     restart: always
     ports:
       - "8000:8000"
