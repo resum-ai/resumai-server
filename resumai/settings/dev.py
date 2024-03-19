@@ -1,7 +1,12 @@
 from .base import *  # noqa
-print(env('DATABASE_NAME'))
 
-DEBUG = True
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 DATABASES = {
     'default': {
@@ -14,3 +19,4 @@ DATABASES = {
     }
 }
 
+DEBUG = True
