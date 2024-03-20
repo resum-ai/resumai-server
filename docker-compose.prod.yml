@@ -15,8 +15,8 @@ services:
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
-#    expose:
-#      - #작성
+    expose:
+      - "8000"
     entrypoint:
       - sh
       - config/docker/entrypoint.prod.sh
