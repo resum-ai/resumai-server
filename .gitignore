@@ -1,6 +1,6 @@
 .idea
 resumai-venv/
-db.sqlite3
+
 resumai/__pycache__/*
 *.pyc
 
