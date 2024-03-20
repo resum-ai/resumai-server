@@ -1,8 +1,12 @@
 .idea
 resumai-venv/
-db.sqlite3
+
 resumai/__pycache__/*
 *.pyc
 
 .env
 .env.prod
+
+.DS_Store
+
+staticfiles

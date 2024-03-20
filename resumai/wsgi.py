@@ -11,7 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-print("hi")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "resumai.settings.base")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "resumai.settings.dev")
 
 application = get_wsgi_application()
