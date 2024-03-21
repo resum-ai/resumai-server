@@ -91,39 +91,35 @@ def kakao_callback(request):
 
     try:
         user = CustomUser.objects.get(email=email)
-        print(data)
-        print(BASE_URL)
+        # 유저가 존재하는 경우
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
-        print(accept_status)
+
         if accept_status != 200:
             return Response({"err_msg": "failed to signin"}, status=accept_status)
 
         accept_json = accept.json()
-        print(accept_json)
-        accept_json.pop("user", None)
+        # key 이름 변경
+        accept_json['accessToken'] = accept_json.pop('access')
+        accept_json['refreshToken'] = accept_json.pop('refresh')
+        accept_json['userProfile'] = accept_json.pop('user')
+        accept_json['userProfile']['id'] = accept_json['userProfile'].pop('pk')
         return Response(accept_json)
 
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
-        # with transaction.atomic():
-        #     CustomUser.objects.create(
-        #         email=email,
-        #         kakao_oid=kakao_oid,
-        #         username=username,
-        #         profile_image=profile_image_url,
-        #         position=None,
-        #     )
-
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
-        print(accept_status)
         if accept_status != 200:
             return Response({"err_msg": "failed to signup"}, status=accept_status)
 
         # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
         accept_json = accept.json()
-        accept_json.pop("user", None)
+        # key 이름 변경
+        accept_json['accessToken'] = accept_json.pop('access')
+        accept_json['refreshToken'] = accept_json.pop('refresh')
+        accept_json['userProfile'] = accept_json.pop('user')
+        accept_json['userProfile']['id'] = accept_json['userProfile'].pop('pk')
         return Response(accept_json)
 
 
@@ -131,10 +127,6 @@ class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
-
-    # @extend_schema(exclude=True)
-    # def post(self, request, *args, **kwargs):
-    #     return super().post(request, *args, **kwargs)
 
 
 class UpdateUserInfoView(APIView):

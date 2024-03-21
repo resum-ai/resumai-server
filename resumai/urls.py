@@ -26,12 +26,16 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("", kakao_login_page, name="home"),
     path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),
-    path(
-        "accounts/social/",
-        include("allauth.socialaccount.urls"),
-    ),
-    path("registration/", include("dj_rest_auth.registration.urls")),
+    path('accounts/', include('dj_rest_auth.urls')),
+    # path('accounts/', include('allauth.urls')),
+    path('accounts/', include('accounts.urls')),
+    # path('accounts/', include('dj_rest_auth.urls')),
+    # path(
+    #     "accounts/social/",
+    #     include("allauth.socialaccount.urls"),
+    # ),
+    # path("registration/", include("dj_rest_auth.registration.urls")),
+
     # swagger 관련
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
