@@ -19,19 +19,21 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
 from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
 
+# 환경변수 세팅
 base_dir = Path(__file__).resolve().parent.parent
-env_file = base_dir / '.env'
+env_file = base_dir / ".env"
 
-if os.getenv('DJANGO_ENV') == 'production':
-    env_file = base_dir / '.env.prod'
+if os.getenv("DJANGO_ENV") == "production":
+    env_file = base_dir / ".env.prod"
 
 env = environ.Env()
 env.read_env(env_file)
 
-BASE_URL = env('BASE_URL')
+BASE_URL = env("BASE_URL")
 KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
+
 
 @extend_schema(
     summary="카카오 로그인",
@@ -57,7 +59,6 @@ def kakao_callback(request):
     code = request.GET.get("code")
 
     # Access Token Request
-
     token_req = requests.get(
         f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
     )
@@ -90,28 +91,29 @@ def kakao_callback(request):
 
     try:
         user = CustomUser.objects.get(email=email)
-        print(user)
-
+        print(data)
+        print(BASE_URL)
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
+        print(accept_status)
         if accept_status != 200:
             return Response({"err_msg": "failed to signin"}, status=accept_status)
 
         accept_json = accept.json()
-        print(accept_json['user']['email'])
+        print(accept_json)
         accept_json.pop("user", None)
         return Response(accept_json)
 
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
-        with transaction.atomic():
-            CustomUser.objects.create(
-                email=email,
-                kakao_oid=kakao_oid,
-                username=username,
-                profile_image=profile_image_url,
-                position=None,
-            )
+        # with transaction.atomic():
+        #     CustomUser.objects.create(
+        #         email=email,
+        #         kakao_oid=kakao_oid,
+        #         username=username,
+        #         profile_image=profile_image_url,
+        #         position=None,
+        #     )
 
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
@@ -130,16 +132,19 @@ class KakaoLoginView(SocialLoginView):
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
 
-    @extend_schema(exclude=True)
-    def post(self, request, *args, **kwargs):
-        print(request)
-        return super().post(request, *args, **kwargs)
+    # @extend_schema(exclude=True)
+    # def post(self, request, *args, **kwargs):
+    #     return super().post(request, *args, **kwargs)
 
 
 class UpdateUserInfoView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
-    @extend_schema(summary="유저 정보 업데이트", request=UserInfoUpdateSerializer, responses={200: UserInfoUpdateSerializer})
+    @extend_schema(
+        summary="유저 정보 업데이트",
+        request=UserInfoUpdateSerializer,
+        responses={200: UserInfoUpdateSerializer},
+    )
     def put(self, request, *args, **kwargs):
         print(request.user)
         user = request.user
@@ -161,10 +166,15 @@ class UpdateUserInfoView(APIView):
         serializer = UserInfoUpdateSerializer(user)
         return Response(serializer.data)
 
+
 class GetUserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(summary="유저 정보 반환", request=GetUserInfoSerializer, responses={200: GetUserInfoSerializer})
+    @extend_schema(
+        summary="유저 정보 반환",
+        request=GetUserInfoSerializer,
+        responses={200: GetUserInfoSerializer},
+    )
     def get(self, request):
         user = request.user
 

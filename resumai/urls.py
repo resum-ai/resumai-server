@@ -32,7 +32,6 @@ urlpatterns = [
         include("allauth.socialaccount.urls"),
     ),
     path("registration/", include("dj_rest_auth.registration.urls")),
-
     # swagger 관련
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
@@ -45,5 +44,4 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-
 ]

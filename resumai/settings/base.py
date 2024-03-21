@@ -5,17 +5,16 @@ import environ
 from pathlib import Path
 
 import pymysql
+
 pymysql.install_as_MySQLdb()
 
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 print(BASE_DIR)
 
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -85,7 +84,7 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_COOKIE": "jwt-auth",
     "REGISTER_SERIALIZER": "accounts.serializers.UserRegisterSerializer",
-    'JWT_AUTH_HTTPONLY': False,
+    "JWT_AUTH_HTTPONLY": False,
 }
 AUTH_USER_MODEL = "accounts.CustomUser"
 
@@ -170,9 +169,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, 'myapp/static'),
