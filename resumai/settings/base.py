@@ -87,6 +87,7 @@ REST_AUTH = {
     "REGISTER_SERIALIZER": "accounts.serializers.UserRegisterSerializer",
     'JWT_AUTH_HTTPONLY': False,
 }
+AUTH_USER_MODEL = "accounts.CustomUser"
 
 # JWT
 SIMPLE_JWT = {
@@ -174,7 +175,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'myapp/static'),
+    # os.path.join(BASE_DIR, 'myapp/static'),
     # 여기에 추가적인 정적 파일 디렉토리 경로를 추가할 수 있습니다.
 ]
 

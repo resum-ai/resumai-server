@@ -1,3 +1,5 @@
+import os
+
 import environ
 from pathlib import Path
 from django.db import transaction
@@ -17,11 +19,16 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
 from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
 
-env_file_path = Path(__file__).resolve().parent.parent / '.env.prod'
-env = environ.Env()
-environ.Env.read_env(env_file_path)
+base_dir = Path(__file__).resolve().parent.parent
+env_file = base_dir / '.env'
 
-BASE_URL = env("BASE_URL")
+if os.getenv('DJANGO_ENV') == 'production':
+    env_file = base_dir / '.env.prod'
+
+env = environ.Env()
+env.read_env(env_file)
+
+BASE_URL = env('BASE_URL')
 KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
@@ -104,11 +111,11 @@ def kakao_callback(request):
                 username=username,
                 profile_image=profile_image_url,
                 position=None,
-                status="Pending",
             )
 
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
+        print(accept_status)
         if accept_status != 200:
             return Response({"err_msg": "failed to signup"}, status=accept_status)
 
@@ -125,6 +132,7 @@ class KakaoLoginView(SocialLoginView):
 
     @extend_schema(exclude=True)
     def post(self, request, *args, **kwargs):
+        print(request)
         return super().post(request, *args, **kwargs)
 
 
@@ -140,7 +148,6 @@ class UpdateUserInfoView(APIView):
         new_username = request.data.get("username")
         new_profile_image = request.data.get("profile_image")
         new_position = request.data.get("position")
-        new_status = request.data.get("status")
 
         # 유저 데이터 비교
         user.username = new_username if new_username is not None else user.username
@@ -148,7 +155,6 @@ class UpdateUserInfoView(APIView):
             new_profile_image if new_profile_image is not None else user.profile_image
         )
         user.position = new_position if new_position is not None else user.position
-        user.status = new_status if new_status is not None else user.status
         user.save()
 
         # 업데이트된 사용자 정보를 반환
