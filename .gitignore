@@ -8,3 +8,5 @@ resumai/__pycache__/*
 .env.prod
 
 .DS_Store
+
+staticfiles

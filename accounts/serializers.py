@@ -11,6 +11,7 @@ from dj_rest_auth.registration.serializers import (
 
 class UserRegisterSerializer(DefaultRegisterSerializer):
     username = serializers.CharField(max_length=50, write_only=True, required=True)
+
     def custom_signup(self, request, user):
         name = self.validated_data.pop("username")
         if name:

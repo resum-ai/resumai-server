@@ -20,12 +20,10 @@ from .models import CustomUser
 from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
 
 # 환경변수 세팅
-base_dir = Path(__file__).resolve().parent.parent
-env_file = base_dir / ".env"
-
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_file = BASE_DIR / ".env"
 if os.getenv("DJANGO_ENV") == "production":
-    env_file = base_dir / ".env.prod"
-
+    env_file = BASE_DIR / ".env.prod"
 env = environ.Env()
 env.read_env(env_file)
 
@@ -100,10 +98,10 @@ def kakao_callback(request):
 
         accept_json = accept.json()
         # key 이름 변경
-        accept_json['accessToken'] = accept_json.pop('access')
-        accept_json['refreshToken'] = accept_json.pop('refresh')
-        accept_json['userProfile'] = accept_json.pop('user')
-        accept_json['userProfile']['id'] = accept_json['userProfile'].pop('pk')
+        accept_json["accessToken"] = accept_json.pop("access")
+        accept_json["refreshToken"] = accept_json.pop("refresh")
+        accept_json["userProfile"] = accept_json.pop("user")
+        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
         return Response(accept_json)
 
     except CustomUser.DoesNotExist:
@@ -116,10 +114,10 @@ def kakao_callback(request):
         # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
         accept_json = accept.json()
         # key 이름 변경
-        accept_json['accessToken'] = accept_json.pop('access')
-        accept_json['refreshToken'] = accept_json.pop('refresh')
-        accept_json['userProfile'] = accept_json.pop('user')
-        accept_json['userProfile']['id'] = accept_json['userProfile'].pop('pk')
+        accept_json["accessToken"] = accept_json.pop("access")
+        accept_json["refreshToken"] = accept_json.pop("refresh")
+        accept_json["userProfile"] = accept_json.pop("user")
+        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
         return Response(accept_json)
 
 
