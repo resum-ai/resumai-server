@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
@@ -86,6 +87,7 @@ def kakao_callback(request):
     # 회원가입, 로그인 로직
 
     data = {"access_token": access_token, "code": code}
+    # TODO 유저 프로필 이미지 저장하도록
 
     try:
         user = CustomUser.objects.get(email=email)
@@ -136,25 +138,16 @@ class UpdateUserInfoView(APIView):
         responses={200: UserInfoUpdateSerializer},
     )
     def put(self, request, *args, **kwargs):
-        print(request.user)
         user = request.user
+        serializer = UserInfoUpdateSerializer(
+            user, data=request.data, partial=True
+        )  # 부분 업데이트 가능
 
-        # 유저 데이터 가져옴
-        new_username = request.data.get("username")
-        new_profile_image = request.data.get("profile_image")
-        new_position = request.data.get("position")
-
-        # 유저 데이터 비교
-        user.username = new_username if new_username is not None else user.username
-        user.profile_image = (
-            new_profile_image if new_profile_image is not None else user.profile_image
-        )
-        user.position = new_position if new_position is not None else user.position
-        user.save()
-
-        # 업데이트된 사용자 정보를 반환
-        serializer = UserInfoUpdateSerializer(user)
-        return Response(serializer.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetUserInfoView(APIView):
@@ -162,13 +155,8 @@ class GetUserInfoView(APIView):
 
     @extend_schema(
         summary="유저 정보 반환",
-        request=GetUserInfoSerializer,
-        responses={200: GetUserInfoSerializer},
     )
     def get(self, request):
         user = request.user
-
         serializer = GetUserInfoSerializer(user)
-        print(serializer.data)
-
         return Response(serializer.data)
