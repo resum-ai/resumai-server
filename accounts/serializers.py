@@ -10,10 +10,10 @@ from dj_rest_auth.registration.serializers import (
 
 
 class UserRegisterSerializer(DefaultRegisterSerializer):
-    name = serializers.CharField(max_length=50, write_only=True, required=True)
+    username = serializers.CharField(max_length=50, write_only=True, required=True)
 
     def custom_signup(self, request, user):
-        name = self.validated_data.pop("name")
+        name = self.validated_data.pop("username")
         if name:
             user.username = name
             user.save()
@@ -22,7 +22,7 @@ class UserRegisterSerializer(DefaultRegisterSerializer):
 class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ("username", "email")
 
 
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
@@ -35,4 +35,3 @@ class GetUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "username", "position", "profile_image")
-

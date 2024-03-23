@@ -5,17 +5,16 @@ import environ
 from pathlib import Path
 
 import pymysql
+
 pymysql.install_as_MySQLdb()
 
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 print(BASE_DIR)
 
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -23,7 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = f"{os.environ.get('DJANGO_SECURE_KEY')}"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["http://127.0.0.1:8000/", "https://*.resumai.kr", "https://resumai.kr"]
 
 
 # Application definition
@@ -85,8 +84,9 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_COOKIE": "jwt-auth",
     "REGISTER_SERIALIZER": "accounts.serializers.UserRegisterSerializer",
-    'JWT_AUTH_HTTPONLY': False,
+    "JWT_AUTH_HTTPONLY": False,
 }
+AUTH_USER_MODEL = "accounts.CustomUser"
 
 # JWT
 SIMPLE_JWT = {
@@ -157,9 +157,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "ko-kr"
+LANGUAGE_CODE = "ko-KR"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -169,12 +169,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'myapp/static'),
+    # os.path.join(BASE_DIR, 'myapp/static'),
     # 여기에 추가적인 정적 파일 디렉토리 경로를 추가할 수 있습니다.
 ]
 

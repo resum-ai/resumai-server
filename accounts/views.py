@@ -1,3 +1,5 @@
+import os
+
 import environ
 from pathlib import Path
 from django.db import transaction
@@ -10,6 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
@@ -17,14 +20,19 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
 from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
 
-env_file_path = Path(__file__).resolve().parent.parent / '.env.prod'
+# 환경변수 세팅
+BASE_DIR = Path(__file__).resolve().parent.parent
+env_file = BASE_DIR / ".env"
+if os.getenv("DJANGO_ENV") == "production":
+    env_file = BASE_DIR / ".env.prod"
 env = environ.Env()
-environ.Env.read_env(env_file_path)
+env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
 KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
+
 
 @extend_schema(
     summary="카카오 로그인",
@@ -50,7 +58,6 @@ def kakao_callback(request):
     code = request.GET.get("code")
 
     # Access Token Request
-
     token_req = requests.get(
         f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
     )
@@ -80,33 +87,27 @@ def kakao_callback(request):
     # 회원가입, 로그인 로직
 
     data = {"access_token": access_token, "code": code}
+    # TODO 유저 프로필 이미지 저장하도록
 
     try:
         user = CustomUser.objects.get(email=email)
-        print(user)
-
+        # 유저가 존재하는 경우
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
+
         if accept_status != 200:
             return Response({"err_msg": "failed to signin"}, status=accept_status)
 
         accept_json = accept.json()
-        print(accept_json['user']['email'])
-        accept_json.pop("user", None)
+        # key 이름 변경
+        accept_json["accessToken"] = accept_json.pop("access")
+        accept_json["refreshToken"] = accept_json.pop("refresh")
+        accept_json["userProfile"] = accept_json.pop("user")
+        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
         return Response(accept_json)
 
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
-        with transaction.atomic():
-            CustomUser.objects.create(
-                email=email,
-                kakao_oid=kakao_oid,
-                username=username,
-                profile_image=profile_image_url,
-                position=None,
-                status="Pending",
-            )
-
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
         if accept_status != 200:
@@ -114,7 +115,11 @@ def kakao_callback(request):
 
         # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
         accept_json = accept.json()
-        accept_json.pop("user", None)
+        # key 이름 변경
+        accept_json["accessToken"] = accept_json.pop("access")
+        accept_json["refreshToken"] = accept_json.pop("refresh")
+        accept_json["userProfile"] = accept_json.pop("user")
+        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
         return Response(accept_json)
 
 
@@ -123,46 +128,35 @@ class KakaoLoginView(SocialLoginView):
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
 
-    @extend_schema(exclude=True)
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
-
 
 class UpdateUserInfoView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
-    @extend_schema(summary="유저 정보 업데이트", request=UserInfoUpdateSerializer, responses={200: UserInfoUpdateSerializer})
+    @extend_schema(
+        summary="유저 정보 업데이트",
+        request=UserInfoUpdateSerializer,
+        responses={200: UserInfoUpdateSerializer},
+    )
     def put(self, request, *args, **kwargs):
-        print(request.user)
         user = request.user
+        serializer = UserInfoUpdateSerializer(
+            user, data=request.data, partial=True
+        )  # 부분 업데이트 가능
 
-        # 유저 데이터 가져옴
-        new_username = request.data.get("username")
-        new_profile_image = request.data.get("profile_image")
-        new_position = request.data.get("position")
-        new_status = request.data.get("status")
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # 유저 데이터 비교
-        user.username = new_username if new_username is not None else user.username
-        user.profile_image = (
-            new_profile_image if new_profile_image is not None else user.profile_image
-        )
-        user.position = new_position if new_position is not None else user.position
-        user.status = new_status if new_status is not None else user.status
-        user.save()
-
-        # 업데이트된 사용자 정보를 반환
-        serializer = UserInfoUpdateSerializer(user)
-        return Response(serializer.data)
 
 class GetUserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(summary="유저 정보 반환", request=GetUserInfoSerializer, responses={200: GetUserInfoSerializer})
+    @extend_schema(
+        summary="유저 정보 반환",
+    )
     def get(self, request):
         user = request.user
-
         serializer = GetUserInfoSerializer(user)
-        print(serializer.data)
-
         return Response(serializer.data)

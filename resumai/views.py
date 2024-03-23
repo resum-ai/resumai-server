@@ -1,4 +1,5 @@
-from django.http import HttpResponse
+from django.shortcuts import render
 
-def home(request):
-    return HttpResponse("hi")
+
+def kakao_login_page(request):
+    return render(request, "home.html")
