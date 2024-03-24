@@ -7,7 +7,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.prod
-    command: gunicorn resumai.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn resumai.wsgi:application --bind 0.0.0.0:8000 -w 16 --threads 8 -t 300
     environment:
       DJANGO_SETTINGS_MODULE: resumai.settings.prod
       DJANGO_ENV: production
