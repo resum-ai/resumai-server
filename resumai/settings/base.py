@@ -178,6 +178,19 @@ STATICFILES_DIRS = [
     # 여기에 추가적인 정적 파일 디렉토리 경로를 추가할 수 있습니다.
 ]
 
+SPECTACULAR_SETTINGS = {
+    "PREPROCESSING_HOOKS": ["resumai.urls.preprocessing_filter_spec"],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
