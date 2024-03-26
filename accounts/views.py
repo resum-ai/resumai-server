@@ -4,6 +4,7 @@ import environ
 from pathlib import Path
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from django.http import JsonResponse
 
 import requests
 from django.shortcuts import redirect
@@ -50,9 +51,13 @@ def kakao_login(request):
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
 
+# @extend_schema(exclude=True)
+# @permission_classes([AllowAny])
+# def finish_login(data):
+#     accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
+#     return accept
 
 @extend_schema(exclude=True)
-@api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 def kakao_callback(request):
     code = request.GET.get("code")
@@ -99,20 +104,23 @@ def kakao_callback(request):
         # 유저가 존재하는 경우
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
+        print(accept_status)
 
         if accept_status != 200:
             return Response({"err_msg": "failed to signin"}, status=accept_status)
 
         accept_json = accept.json()
+        print(f"accept_json, {accept_json}")
         # key 이름 변경
         accept_json["accessToken"] = accept_json.pop("access")
         accept_json["refreshToken"] = accept_json.pop("refresh")
         accept_json["userProfile"] = accept_json.pop("user")
         accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
-        return Response(accept_json)
+        return JsonResponse(accept_json)
 
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
+        # accept = finish_login(data)
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
         if accept_status != 200:
@@ -125,9 +133,9 @@ def kakao_callback(request):
         accept_json["refreshToken"] = accept_json.pop("refresh")
         accept_json["userProfile"] = accept_json.pop("user")
         accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
-        return Response(accept_json)
+        return JsonResponse(accept_json)
 
-
+@extend_schema(exclude=True)
 class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
