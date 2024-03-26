@@ -35,7 +35,7 @@ urlpatterns = [
     path("", kakao_login_page, name="home"),
     path("admin/", admin.site.urls),
     path("accounts/", include("dj_rest_auth.urls")),
-    # path('accounts/', include('allauth.urls')),
+    path('accounts/', include('allauth.urls')),
     path("accounts/", include("accounts.urls")),
     path("registration/", include("dj_rest_auth.registration.urls")),
     # swagger 관련
