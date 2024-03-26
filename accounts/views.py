@@ -56,20 +56,23 @@ def kakao_login(request):
 @permission_classes([AllowAny])
 def kakao_callback(request):
     code = request.GET.get("code")
-    print(code)
+    print(f"code: {code}")
 
     # Access Token Request
     token_req = requests.get(
         f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
     )
+    print(f"token_req: {token_req}")
 
     token_req_json = token_req.json()
+    print(f"token_req_json: {token_req_json}")
 
     error = token_req_json.get("error")
     if error is not None:
         raise JSONDecodeError(error)
 
     access_token = token_req_json.get("access_token")
+    print(f"access_token: {access_token}")
 
     # Email Request
 
@@ -78,6 +81,7 @@ def kakao_callback(request):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     profile_data = profile_request.json()
+    print(f"profile_data: {profile_data}")
 
     kakao_oid = profile_data.get("id")
     kakao_account = profile_data.get("kakao_account")
