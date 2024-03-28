@@ -107,7 +107,11 @@ def kakao_callback(request):
     try:
         user = CustomUser.objects.get(email=email)
         # 유저가 존재하는 경우
+        logger.warning("유저 존재")
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
+        logger.warning(f"accept: {accept}")
+        logger.warning(f"accept.reason: {accept.reason}")
+        logger.warning(f"accept.history: {accept.history}")
         accept_status = accept.status_code
         logger.warning(accept_status)
 
@@ -125,8 +129,12 @@ def kakao_callback(request):
 
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
+        logger.warning("유저 미존재")
         # accept = finish_login(data)
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
+        logger.warning(f"accept: {accept}")
+        logger.warning(f"accept.reason: {accept.reason}")
+        logger.warning(f"accept.history: {accept.history}")
         accept_status = accept.status_code
         logger.warning(accept_status)
         if accept_status != 200:
