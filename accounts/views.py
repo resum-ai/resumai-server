@@ -109,13 +109,13 @@ def kakao_callback(request):
         # 유저가 존재하는 경우
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
-        print(accept_status)
+        logger.warning(accept_status)
 
         if accept_status != 200:
             return Response({"err_msg": "failed to signin"}, status=accept_status)
 
         accept_json = accept.json()
-        print(f"accept_json, {accept_json}")
+        logger.warning(f"accept_json, {accept_json}")
         # key 이름 변경
         accept_json["accessToken"] = accept_json.pop("access")
         accept_json["refreshToken"] = accept_json.pop("refresh")
@@ -128,11 +128,13 @@ def kakao_callback(request):
         # accept = finish_login(data)
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         accept_status = accept.status_code
+        logger.warning(accept_status)
         if accept_status != 200:
             return Response({"err_msg": "failed to signup"}, status=accept_status)
 
         # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
         accept_json = accept.json()
+        logger.warning(f"accept_json, {accept_json}")
         # key 이름 변경
         accept_json["accessToken"] = accept_json.pop("access")
         accept_json["refreshToken"] = accept_json.pop("refresh")
