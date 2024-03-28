@@ -60,7 +60,8 @@ def kakao_login(request):
 @extend_schema(exclude=True)
 @permission_classes([AllowAny])
 def kakao_callback(request):
-    code = request.GET.get("code")
+    if request:
+        code = request.GET.get("code")
     print(f"code: {code}")
 
     # Access Token Request
