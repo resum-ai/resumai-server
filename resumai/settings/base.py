@@ -197,5 +197,10 @@ SPECTACULAR_SETTINGS = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+}
+
 
 
