@@ -112,6 +112,7 @@ def kakao_callback(request):
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.history: {accept.history}")
+        logger.warning(accept.content)
         accept_status = accept.status_code
         logger.warning(accept_status)
 
