@@ -33,7 +33,8 @@ env = environ.Env()
 env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
-KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
+# KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
+KAKAO_CALLBACK_URI = "http://localhost:8000/accounts/kakao/callback"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
@@ -61,7 +62,7 @@ def kakao_login(request):
 #     accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
 #     return accept
 
-@extend_schema(exclude=True)
+# @extend_schema(exclude=True)
 @permission_classes([AllowAny])
 def kakao_callback(request):
     logger.warning("kakao callback")
@@ -131,7 +132,6 @@ def kakao_callback(request):
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
         logger.warning("유저 미존재")
-        # accept = finish_login(data)
         accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
@@ -152,11 +152,12 @@ def kakao_callback(request):
         accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
         return JsonResponse(accept_json)
 
-@extend_schema(exclude=True)
+# @extend_schema(exclude=True)
 class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
+
 
 
 class UpdateUserInfoView(APIView):
@@ -190,3 +191,4 @@ class GetUserInfoView(APIView):
         user = request.user
         serializer = GetUserInfoSerializer(user)
         return Response(serializer.data)
+
