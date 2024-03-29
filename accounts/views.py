@@ -34,7 +34,7 @@ env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
 # KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
-KAKAO_CALLBACK_URI = "http://localhost:8000/accounts/kakao/callback/"
+KAKAO_CALLBACK_URI = "http://api.resumai.kr/accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
