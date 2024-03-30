@@ -33,8 +33,8 @@ env = environ.Env()
 env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
-# KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
-KAKAO_CALLBACK_URI = "http://localhost:8000/accounts/kakao/callback/"
+KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
+# KAKAO_CALLBACK_URI = "http://api.resumai.kr/accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
@@ -55,6 +55,7 @@ def kakao_login(request):
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
+
 
 # @extend_schema(exclude=True)
 # @permission_classes([AllowAny])
@@ -109,7 +110,7 @@ def kakao_callback(request):
         user = CustomUser.objects.get(email=email)
         # 유저가 존재하는 경우
         logger.warning("유저 존재")
-        accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.history: {accept.history}")
@@ -132,7 +133,7 @@ def kakao_callback(request):
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
         logger.warning("유저 미존재")
-        accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.request: {accept.request}")
