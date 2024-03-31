@@ -112,7 +112,7 @@ def kakao_callback(request):
         # 유저가 존재하는 경우
         logger.warning(f"user: {user}")
         logger.warning("유저 존재")
-        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
+        accept = requests.post("https://api.resumai.kr/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.history: {accept.history}")
