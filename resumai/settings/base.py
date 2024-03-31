@@ -21,8 +21,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = f"{os.environ.get('DJANGO_SECURE_KEY')}"
-ALLOWED_HOSTS = ["127.0.0.1", "*.resumai.kr", "resumai.kr", "localhost:3000"]
-
+# ALLOWED_HOSTS = ["127.0.0.1", "api.resumai.kr", "*.resumai.kr", "resumai.kr", "localhost:3000"]
+ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
