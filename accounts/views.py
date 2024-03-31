@@ -112,7 +112,7 @@ def kakao_callback(request):
         # 유저가 존재하는 경우
         logger.warning(f"user: {user}")
         logger.warning("유저 존재")
-        accept = requests.post("http://localhost:80/accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.history: {accept.history}")
@@ -135,7 +135,7 @@ def kakao_callback(request):
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
         logger.warning("유저 미존재")
-        accept = requests.post("http://localhost:80/accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.request: {accept.request}")
