@@ -104,13 +104,15 @@ def kakao_callback(request):
     # 회원가입, 로그인 로직
 
     data = {"access_token": access_token, "code": code}
+    logger.warning(f"data: {data}")
     # TODO 유저 프로필 이미지 저장하도록
 
     try:
         user = CustomUser.objects.get(email=email)
         # 유저가 존재하는 경우
+        logger.warning(f"user: {user}")
         logger.warning("유저 존재")
-        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:80/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.history: {accept.history}")
@@ -133,7 +135,7 @@ def kakao_callback(request):
     except CustomUser.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
         logger.warning("유저 미존재")
-        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
+        accept = requests.post("http://localhost:80/accounts/kakao/login/finish/", data=data)
         logger.warning(f"accept: {accept}")
         logger.warning(f"accept.reason: {accept.reason}")
         logger.warning(f"accept.request: {accept.request}")
