@@ -3,7 +3,7 @@ import os
 import environ
 from pathlib import Path
 from django.db import transaction
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from django.http import JsonResponse
 
 import requests
@@ -157,6 +157,30 @@ def kakao_callback(request):
     #     return JsonResponse(accept_json)
 
 # @extend_schema(exclude=True)
+@extend_schema(
+    summary="카카오 로그인 마무리",
+    description="access token, code를 post 요청으로 보내면 access token, 유저 정보를 반환합니다.",
+    # responses={
+    #     200: OpenApiResponse(
+    #         description="Redirects to the Kakao login page.", response=None
+    #     )
+    # },
+    examples=[
+            OpenApiExample(
+                response_only=True,
+                summary="Response Body Example입니다.",
+                name="success_example",
+                value={
+                    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlI",
+                    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBl",
+                    "user": {
+                        "pk": 6,
+                        "email": "yjoonjang@naver.com"
+                    }
+                },
+            ),
+        ],
+)
 class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
