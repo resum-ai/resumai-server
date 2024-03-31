@@ -3,7 +3,12 @@ import os
 import environ
 from pathlib import Path
 from django.db import transaction
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, OpenApiParameter
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    OpenApiExample,
+    OpenApiParameter,
+)
 from django.http import JsonResponse
 
 import requests
@@ -19,7 +24,11 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
-from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer, KakaoTokenSerializer
+from .serializers import (
+    UserInfoUpdateSerializer,
+    GetUserInfoSerializer,
+    KakaoTokenSerializer,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,9 +51,7 @@ CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 @extend_schema(
     summary="카카오 로그인",
     description="카카오 로그인 페이지로 리다이렉트하여, 정보를 입력하면 카카오 **access_token, code**를 반환합니다.",
-    responses={
-        200: KakaoTokenSerializer
-    }
+    responses={200: KakaoTokenSerializer},
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -52,6 +59,7 @@ def kakao_login():
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
+
 
 @permission_classes([AllowAny])
 def kakao_callback(request):
@@ -135,6 +143,7 @@ def kakao_callback(request):
     #     accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
     #     return JsonResponse(accept_json)
 
+
 # @extend_schema(exclude=True)
 @extend_schema(
     summary="카카오 로그인 마무리",
@@ -143,20 +152,18 @@ def kakao_callback(request):
         OpenApiParameter(
             name="access_token",
             type=str,
-            description="발급받은 카카오의 access_token 입니다."
+            description="발급받은 카카오의 access_token 입니다.",
         ),
         OpenApiParameter(
-            name="code",
-            type=str,
-            description="발급받은 카카오의 code 입니다."
-        )
+            name="code", type=str, description="발급받은 카카오의 code 입니다."
+        ),
     ],
     request={
         "application/json": {
             "type": "object",
             "properties": {
                 "access_token": {"type": "string"},
-                "code": {"type": "string"}
+                "code": {"type": "string"},
             },
         },
     },
@@ -168,19 +175,15 @@ def kakao_callback(request):
             value={
                 "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlI",
                 "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBl",
-                "user": {
-                    "pk": 6,
-                    "email": "yjoonjang@naver.com"
-                }
+                "user": {"pk": 6, "email": "yjoonjang@naver.com"},
             },
         ),
-    ]
+    ],
 )
 class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
-
 
 
 class UpdateUserInfoView(APIView):
@@ -214,4 +217,3 @@ class GetUserInfoView(APIView):
         user = request.user
         serializer = GetUserInfoSerializer(user)
         return Response(serializer.data)
-

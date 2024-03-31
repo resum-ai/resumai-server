@@ -23,13 +23,15 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
 )
 
+
 def preprocessing_filter_spec(endpoints):
     filtered = []
     for path, path_regex, method, callback in endpoints:
         # Remove all but DRF API endpoints
-        if (not path.startswith("/registration/")):
+        if not path.startswith("/registration/"):
             filtered.append((path, path_regex, method, callback))
     return filtered
+
 
 urlpatterns = [
     path("", kakao_login_page, name="home"),
