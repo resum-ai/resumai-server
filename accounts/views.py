@@ -55,7 +55,7 @@ CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def kakao_login():
+def kakao_login(request):
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
