@@ -19,10 +19,9 @@ class UserRegisterSerializer(DefaultRegisterSerializer):
             user.save()
 
 
-class UserLoginSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("username", "email")
+class KakaoTokenSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    code = serializers.CharField()
 
 
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
