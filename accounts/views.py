@@ -106,54 +106,55 @@ def kakao_callback(request):
     data = {"access_token": access_token, "code": code}
     logger.warning(f"data: {data}")
     # TODO 유저 프로필 이미지 저장하도록
+    return JsonResponse(data)
 
-    try:
-        user = CustomUser.objects.get(email=email)
-        # 유저가 존재하는 경우
-        logger.warning(f"user: {user}")
-        logger.warning("유저 존재")
-        accept = requests.post("https://api.resumai.kr/accounts/kakao/login/finish/", data=data)
-        logger.warning(f"accept: {accept}")
-        logger.warning(f"accept.reason: {accept.reason}")
-        logger.warning(f"accept.history: {accept.history}")
-        logger.warning(accept.content)
-        accept_status = accept.status_code
-        logger.warning(accept_status)
-
-        if accept_status != 200:
-            return Response({"err_msg": "failed to signin"}, status=accept_status)
-
-        accept_json = accept.json()
-        logger.warning(f"accept_json, {accept_json}")
-        # key 이름 변경
-        accept_json["accessToken"] = accept_json.pop("access")
-        accept_json["refreshToken"] = accept_json.pop("refresh")
-        accept_json["userProfile"] = accept_json.pop("user")
-        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
-        return JsonResponse(accept_json)
-
-    except CustomUser.DoesNotExist:
-        # 기존에 가입된 유저가 없으면 새로 가입
-        logger.warning("유저 미존재")
-        accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
-        logger.warning(f"accept: {accept}")
-        logger.warning(f"accept.reason: {accept.reason}")
-        logger.warning(f"accept.request: {accept.request}")
-        logger.warning(f"accept.raw: {accept.raw}")
-        accept_status = accept.status_code
-        logger.warning(accept_status)
-        if accept_status != 200:
-            return Response({"err_msg": "failed to signup"}, status=accept_status)
-
-        # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
-        accept_json = accept.json()
-        logger.warning(f"accept_json, {accept_json}")
-        # key 이름 변경
-        accept_json["accessToken"] = accept_json.pop("access")
-        accept_json["refreshToken"] = accept_json.pop("refresh")
-        accept_json["userProfile"] = accept_json.pop("user")
-        accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
-        return JsonResponse(accept_json)
+    # try:
+    #     user = CustomUser.objects.get(email=email)
+    #     # 유저가 존재하는 경우
+    #     logger.warning(f"user: {user}")
+    #     logger.warning("유저 존재")
+    #     accept = requests.post("https://api.resumai.kr/accounts/kakao/login/finish/", data=data)
+    #     logger.warning(f"accept: {accept}")
+    #     logger.warning(f"accept.reason: {accept.reason}")
+    #     logger.warning(f"accept.history: {accept.history}")
+    #     logger.warning(accept.content)
+    #     accept_status = accept.status_code
+    #     logger.warning(accept_status)
+    #
+    #     if accept_status != 200:
+    #         return Response({"err_msg": "failed to signin"}, status=accept_status)
+    #
+    #     accept_json = accept.json()
+    #     logger.warning(f"accept_json, {accept_json}")
+    #     # key 이름 변경
+    #     accept_json["accessToken"] = accept_json.pop("access")
+    #     accept_json["refreshToken"] = accept_json.pop("refresh")
+    #     accept_json["userProfile"] = accept_json.pop("user")
+    #     accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
+    #     return JsonResponse(accept_json)
+    #
+    # except CustomUser.DoesNotExist:
+    #     # 기존에 가입된 유저가 없으면 새로 가입
+    #     logger.warning("유저 미존재")
+    #     accept = requests.post("http://localhost:8000/accounts/kakao/login/finish/", data=data)
+    #     logger.warning(f"accept: {accept}")
+    #     logger.warning(f"accept.reason: {accept.reason}")
+    #     logger.warning(f"accept.request: {accept.request}")
+    #     logger.warning(f"accept.raw: {accept.raw}")
+    #     accept_status = accept.status_code
+    #     logger.warning(accept_status)
+    #     if accept_status != 200:
+    #         return Response({"err_msg": "failed to signup"}, status=accept_status)
+    #
+    #     # user의 pk, email, first name, last name과 Access Token, Refresh token 가져옴
+    #     accept_json = accept.json()
+    #     logger.warning(f"accept_json, {accept_json}")
+    #     # key 이름 변경
+    #     accept_json["accessToken"] = accept_json.pop("access")
+    #     accept_json["refreshToken"] = accept_json.pop("refresh")
+    #     accept_json["userProfile"] = accept_json.pop("user")
+    #     accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
+    #     return JsonResponse(accept_json)
 
 # @extend_schema(exclude=True)
 class KakaoLoginView(SocialLoginView):
