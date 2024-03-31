@@ -3,15 +3,12 @@ services:
 
   db:
     container_name: db
-    image: mariadb:latest #mac
+    image: mariadb:latest
     restart: always
-    environment:
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_ROOT_PASSWORD: 'mysql'
     expose:
       - 3306
     ports:
-      - "3307:3306"
+      - '3307:3306'
     env_file:
       - .env
     volumes:
@@ -19,16 +16,14 @@ services:
 
   web:
     container_name: web
-    build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --settings=resumai.settings.dev"
     environment:
-      MYSQL_ROOT_PASSWORD: mysql
-      DATABASE_NAME: mysql
-      DATABASE_USER: 'root'
-      DATABASE_PASSWORD: mysql
-      DATABASE_PORT: 3306
-      DATABASE_HOST: db
-      DJANGO_SETTINGS_MODULE: resumai.settings.dev
+      DJANGO_ENV: development
+    env_file:
+      - .env
     restart: always
     ports:
       - "8000:8000"

@@ -6,29 +6,30 @@ services:
     container_name: web
     build:
       context: ./
-      dockerfile: Dockerfile
-    command: gunicorn resumai.wsgi:application --bind 0.0.0.0:8000
+      dockerfile: Dockerfile.prod
+    command: gunicorn resumai.wsgi:application --bind 0.0.0.0:8000 -t 120
     environment:
       DJANGO_SETTINGS_MODULE: resumai.settings.prod
+      DJANGO_ENV: production
     env_file:
-      - #작성
+      - .env.prod
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
     expose:
-      - #작성
+      - 8000
     entrypoint:
       - sh
       - config/docker/entrypoint.prod.sh
 
   nginx:
     container_name: nginx
-    build: #작성
+    build: ./config/nginx
     volumes:
       - static:/home/app/web/static
       - media:/home/app/web/media
     ports:
-      - #작성
+      - "80:80"
     depends_on:
       - web
 

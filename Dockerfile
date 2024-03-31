@@ -1,14 +1,17 @@
-FROM python:3.10
-WORKDIR /usr/src/app
+FROM python:3.10.0-alpine
+ENV PYTHONUNBUFFERED 1
 
-COPY requirements.txt ./
+RUN mkdir /app
+WORKDIR /app
+
+# dependencies for psycopg2-binary
+RUN apk add --no-cache mariadb-connector-c-dev libffi-dev gcc musl-dev
+RUN apk update && apk add python3 python3-dev mariadb-dev build-base && pip3 install mysqlclient
+
+# By copying over requirements first, we make sure that Docker will cache
+# our installed requirements rather than reinstall them on every build
+COPY requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
 
-## Copy all src files
-COPY . .
-
-## Run the application on the port 8080
-EXPOSE 8000
-
-# gunicorn 배포 명령어
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "resumai.wsgi:application"]
+# Now copy in our code, and run it
+COPY . /app/
