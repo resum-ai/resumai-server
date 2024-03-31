@@ -3,7 +3,12 @@ import os
 import environ
 from pathlib import Path
 from django.db import transaction
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiResponse,
+    OpenApiExample,
+    OpenApiParameter,
+)
 from django.http import JsonResponse
 
 import requests
@@ -19,7 +24,11 @@ from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from allauth.socialaccount.providers.kakao import views as kakao_view
 from .models import CustomUser
-from .serializers import UserInfoUpdateSerializer, GetUserInfoSerializer
+from .serializers import (
+    UserInfoUpdateSerializer,
+    GetUserInfoSerializer,
+    KakaoTokenSerializer,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,59 +50,40 @@ CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
 @extend_schema(
     summary="카카오 로그인",
-    description="카카오 로그인 페이지로 리다이렉트합니다.",
-    responses={
-        302: OpenApiResponse(
-            description="Redirects to the Kakao login page.", response=None
-        )
-    },
+    description="카카오 로그인 페이지로 리다이렉트하여, 정보를 입력하면 카카오 **access_token, code**를 반환합니다.",
+    responses={200: KakaoTokenSerializer},
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def kakao_login(request):
-    print("hi")
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
 
 
-# @extend_schema(exclude=True)
-# @permission_classes([AllowAny])
-# def finish_login(data):
-#     accept = requests.post(f"{BASE_URL}accounts/kakao/login/finish/", data=data)
-#     return accept
-
-# @extend_schema(exclude=True)
 @permission_classes([AllowAny])
 def kakao_callback(request):
-    logger.warning("kakao callback")
     code = request.GET.get("code")
-    logger.warning(f"code: {code}")
 
     # Access Token Request
     token_req = requests.get(
         f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
     )
-    logger.warning(f"token_req: {token_req}")
 
     token_req_json = token_req.json()
-    logger.warning(f"token_req_json: {token_req_json}")
 
     error = token_req_json.get("error")
     if error is not None:
         raise JSONDecodeError(error)
 
     access_token = token_req_json.get("access_token")
-    logger.warning(f"access_token: {access_token}")
 
     # Email Request
-
     profile_request = requests.get(
         "https://kapi.kakao.com/v2/user/me",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     profile_data = profile_request.json()
-    logger.warning(f"profile_data: {profile_data}")
 
     kakao_oid = profile_data.get("id")
     kakao_account = profile_data.get("kakao_account")
@@ -101,10 +91,7 @@ def kakao_callback(request):
     profile_image_url = kakao_account["profile"]["profile_image_url"]
     email = kakao_account.get("email")
 
-    # 회원가입, 로그인 로직
-
     data = {"access_token": access_token, "code": code}
-    logger.warning(f"data: {data}")
     # TODO 유저 프로필 이미지 저장하도록
     return JsonResponse(data)
 
@@ -156,36 +143,47 @@ def kakao_callback(request):
     #     accept_json["userProfile"]["id"] = accept_json["userProfile"].pop("pk")
     #     return JsonResponse(accept_json)
 
+
 # @extend_schema(exclude=True)
 @extend_schema(
     summary="카카오 로그인 마무리",
-    description="access token, code를 post 요청으로 보내면 access token, 유저 정보를 반환합니다.",
-    # responses={
-    #     200: OpenApiResponse(
-    #         description="Redirects to the Kakao login page.", response=None
-    #     )
-    # },
+    description="access token, code를 post 요청으로 보내면 access token, 유저 정보를 반환합니다. **(id_token은 불필요합니다.)**",
+    parameters=[
+        OpenApiParameter(
+            name="access_token",
+            type=str,
+            description="발급받은 카카오의 access_token 입니다.",
+        ),
+        OpenApiParameter(
+            name="code", type=str, description="발급받은 카카오의 code 입니다."
+        ),
+    ],
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "access_token": {"type": "string"},
+                "code": {"type": "string"},
+            },
+        },
+    },
     examples=[
-            OpenApiExample(
-                response_only=True,
-                summary="Response Body Example입니다.",
-                name="success_example",
-                value={
-                    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlI",
-                    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBl",
-                    "user": {
-                        "pk": 6,
-                        "email": "yjoonjang@naver.com"
-                    }
-                },
-            ),
-        ],
+        OpenApiExample(
+            response_only=True,
+            summary="Response Body Example입니다.",
+            name="success_example",
+            value={
+                "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlI",
+                "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBl",
+                "user": {"pk": 6, "email": "yjoonjang@naver.com"},
+            },
+        ),
+    ],
 )
 class KakaoLoginView(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     client_class = OAuth2Client
     callback_url = KAKAO_CALLBACK_URI
-
 
 
 class UpdateUserInfoView(APIView):
@@ -219,4 +217,3 @@ class GetUserInfoView(APIView):
         user = request.user
         serializer = GetUserInfoSerializer(user)
         return Response(serializer.data)
-
