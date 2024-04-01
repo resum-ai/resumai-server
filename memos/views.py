@@ -84,3 +84,42 @@ class GetMemoDetailView(APIView):
         memo = self.get_object(pk, request.user)
         serializer = MemoSerializer(memo)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# class ScrapMemoView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     def get_object(self, pk, user):
+#         try:
+#             memo = Memo.objects.get(pk=pk)
+#             # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
+#             if memo.user != user:
+#                 raise Http404("해당 메모를 스크랩할 권한이 없습니다.")
+#             return memo
+#         except Memo.DoesNotExist:
+#             raise Http404
+#
+#     def get(self, request, pk, format=None):
+#         memo = self.get_object(pk, request.user)
+#         # is_scrapped 값 토글
+#         memo.is_scrapped = not memo.is_scrapped
+#         memo.save(update_fields=['is_scrapped'])
+#         return Response({'status': 'success', 'is_scrapped': memo.is_scrapped}, status=status.HTTP_200_OK)
+
+class DeleteMemoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        try:
+            memo = Memo.objects.get(pk=pk)
+            # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
+            if memo.user != user:
+                raise Http404("You do not have permission to delete this memo.")
+            return memo
+        except Memo.DoesNotExist:
+            raise Http404
+
+    def delete(self, request, pk, format=None):
+        memo = self.get_object(pk, request.user)
+        memo.delete()
+        return Response({'status': 'success', 'message': 'Memo deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
