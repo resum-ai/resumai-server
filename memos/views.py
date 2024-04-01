@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
+from django.http import Http404
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -48,8 +49,6 @@ class PostMemoView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class GetAllMemoView(APIView, PageNumberPagination):
     permission_classes = [IsAuthenticated]
 
@@ -66,3 +65,22 @@ class GetAllMemoView(APIView, PageNumberPagination):
         # Pagination이 적용되지 않은 경우(선택적)
         serializer = MemoSerializer(memos, many=True)
         return Response(serializer.data)
+
+
+class GetMemoDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        try:
+            memo = Memo.objects.get(pk=pk)
+            # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
+            if memo.user != user:
+                raise Http404("해당 메모에 접근할 권한이 없습니다.")
+            return memo
+        except Memo.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        memo = self.get_object(pk, request.user)
+        serializer = MemoSerializer(memo)
+        return Response(serializer.data, status=status.HTTP_200_OK)

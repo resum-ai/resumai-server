@@ -4,5 +4,6 @@ from memos import views
 
 urlpatterns = [
     path("", views.PostMemoView.as_view(), name="post_memo"),
-    path("all", views.GetAllMemoView.as_view(), name="get_all_memos")
+    path("all", views.GetAllMemoView.as_view(), name="get_all_memos"),
+    path('memo/<int:pk>/', views.GetMemoDetailView.as_view(), name='memo-detail')
 ]
