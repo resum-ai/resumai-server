@@ -14,9 +14,9 @@ from .views import kakao_login_page
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Break-Magazine API",
+        title="RESUMAI API",
         default_version="v1",
-        description="API documentation for Break-Magazine Webzine project",
+        description="API documentation for RESUMAI project",
     ),
     public=True,
     patterns=accounts_urlpatterns,
@@ -36,8 +36,6 @@ def preprocessing_filter_spec(endpoints):
 urlpatterns = [
     path("", kakao_login_page, name="home"),
     path("admin/", admin.site.urls),
-    # path("accounts/", include("dj_rest_auth.urls")),
-    # path('accounts/', include('allauth.urls')),
     path("accounts/", include("accounts.urls")),
     path("registration/", include("dj_rest_auth.registration.urls")),
     path("memos/", include("memos.urls")),
