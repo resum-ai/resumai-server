@@ -40,6 +40,7 @@ urlpatterns = [
     # path('accounts/', include('allauth.urls')),
     path("accounts/", include("accounts.urls")),
     path("registration/", include("dj_rest_auth.registration.urls")),
+    path("memos/", include("views.urls")),
     # swagger 관련
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
