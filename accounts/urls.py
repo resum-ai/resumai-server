@@ -3,8 +3,8 @@ from accounts import views
 
 # TODO swagger에 뜨는 api 관리
 urlpatterns = [
-    path("kakao/login/", views.kakao_login, name="kakao_login"),
-    path("kakao/callback/", views.kakao_callback, name="kakao_callback"),
+    path("kakao/", views.kakao_login, name="kakao_login"),
+    path("kakao/login/", views.kakao_callback, name="kakao_callback"),
     path(
         "kakao/login/finish/",
         views.KakaoLoginView.as_view(),
