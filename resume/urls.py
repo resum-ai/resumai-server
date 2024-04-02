@@ -3,5 +3,5 @@ from resume import views
 
 
 urlpatterns = [
-    # path("", views.PostMemoView.as_view(), name="post_memo"),
+    path("guidelines/", views.GetGuidelinesView.as_view(), name="get_guidelines"),
 ]
