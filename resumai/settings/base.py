@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "resumai",
     "accounts",
     "memos",
+    "resume",
     # django-rest-auth
     "rest_framework",
     "rest_framework_simplejwt",
