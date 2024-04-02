@@ -10,5 +10,5 @@ class MemoSerializer(serializers.ModelSerializer):
 class PostMemoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Memo
-        fields = ("id", "title", "content", "created_at", "updated_at", "is_scrapped", "is_finished")
+        fields = ("id", "title", "content", "created_at", "updated_at")
         read_only_fields = ("id", "created_at", "updated_at")
