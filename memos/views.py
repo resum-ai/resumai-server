@@ -1,6 +1,6 @@
 from django.http import Http404
 from django.db.models import Q
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -107,27 +107,6 @@ class GetMemoDetailView(APIView):
         serializer = MemoSerializer(memo)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-# class ScrapMemoView(APIView):
-#     permission_classes = [IsAuthenticated]
-#
-#     def get_object(self, pk, user):
-#         try:
-#             memo = Memo.objects.get(pk=pk)
-#             # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
-#             if memo.user != user:
-#                 raise Http404("해당 메모를 스크랩할 권한이 없습니다.")
-#             return memo
-#         except Memo.DoesNotExist:
-#             raise Http404
-#
-#     def get(self, request, pk, format=None):
-#         memo = self.get_object(pk, request.user)
-#         # is_scrapped 값 토글
-#         memo.is_scrapped = not memo.is_scrapped
-#         memo.save(update_fields=['is_scrapped'])
-#         return Response({'status': 'success', 'is_scrapped': memo.is_scrapped}, status=status.HTTP_200_OK)
-
 class DeleteMemoView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -141,6 +120,14 @@ class DeleteMemoView(APIView):
         except Memo.DoesNotExist:
             raise Http404
 
+    @extend_schema(
+        summary="메모 삭제",
+        description="특정 메모를 삭제합니다. 메모를 작성한 사용자만 해당 메모를 삭제할 수 있습니다.",
+        responses={
+            204: None,  # 성공적으로 삭제되었을 때, 특별한 응답 본문은 없음
+            404: {'description': '해당 메모를 찾을 수 없거나 삭제할 권한이 없습니다.'}
+        },
+    )
     def delete(self, request, pk, format=None):
         memo = self.get_object(pk, request.user)
         memo.delete()
