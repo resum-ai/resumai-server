@@ -5,7 +5,8 @@ from .models import Memo
 class MemoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Memo
-        fields = '__all__'  # 모든 필드를 포함
+        fields = "__all__"  # 모든 필드를 포함
+
 
 class PostMemoSerializer(serializers.ModelSerializer):
     class Meta:
