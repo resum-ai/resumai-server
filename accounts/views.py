@@ -48,13 +48,12 @@ REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
 
-@extend_schema(
-    summary="카카오 로그인",
-    description="카카오 로그인 페이지로 리다이렉트하여, 정보를 입력하면 카카오 **access_token, code**를 반환합니다.",
-    responses={200: KakaoTokenSerializer},
-)
-@api_view(["GET"])
-@permission_classes([AllowAny])
+# @extend_schema(
+#     summary="카카오 로그인",
+#     description="카카오 로그인 페이지로 리다이렉트하여, 정보를 입력하면 카카오 **access_token, code**를 반환합니다.",
+#     responses={200: KakaoTokenSerializer},
+# )
+@extend_schema(exclude=True)
 def kakao_login(request):
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
@@ -144,7 +143,6 @@ def kakao_callback(request):
     #     return JsonResponse(accept_json)
 
 
-# @extend_schema(exclude=True)
 @extend_schema(
     summary="카카오 로그인 마무리",
     description="access token, code를 post 요청으로 보내면 access token, 유저 정보를 반환합니다. **(id_token은 불필요합니다.)**",
