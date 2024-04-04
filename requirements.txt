@@ -35,6 +35,7 @@ oauthlib==3.2.2
 openai==1.16.0
 packaging==23.2
 pathspec==0.12.1
+pinecone-client==3.2.2
 platformdirs==4.2.0
 pycparser==2.21
 pydantic==2.6.4

@@ -4,4 +4,5 @@ from resume import views
 
 urlpatterns = [
     path("guidelines/", views.GetGuidelinesView.as_view(), name="get_guidelines"),
+    path("generate/", views.GenerateResumeView.as_view(), name="generate_resume"),
 ]
