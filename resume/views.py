@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import Http404
 from django.db.models import Q
@@ -9,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 from django.http import JsonResponse
+from typing import List
 
 from drf_spectacular.utils import (
     extend_schema,
@@ -78,29 +80,47 @@ class GenerateResumeView(APIView):
             OpenApiParameter(
                 name="question",
                 type=str,
-                description="기업이 제시한 질문을 입력합니다.",
+                description="기업이 제시한 질문",
             ),
             OpenApiParameter(
-                name="guidelines",
-                type=str,
-                description="가이드라인 리스트를 입력합니다.",
+                name='guidelines',
+                type={
+                    'type': 'array',
+                    'items': {
+                        'type': 'string'
+                    }
+                },
+                location=OpenApiParameter.QUERY,
+                required=False,
+                style='form',
+                explode=False,
+                description="제공된 가이드라인",
             ),
             OpenApiParameter(
-                name="answers",
-                type=str,
-                description="각 가이드라인에 작성한 답안을 리스트로 전달합니다. 답변이 없을 경우, 공백을 담아 전달합니다.",
+                name='answers',
+                type={
+                    'type': 'array',
+                    'items': {
+                        'type': 'string'
+                    }
+                },
+                location=OpenApiParameter.QUERY,
+                required=False,
+                style='form',
+                explode=False,
+                description="제공된 가이드라인에 대한 답변",
             ),
             OpenApiParameter(
                 name="free_answer",
                 type=str,
-                description="자유 작성란에 작성한 내용을 전달합니다.",
+                description="자유 작성란에 작성한 답변",
             ),
             OpenApiParameter(
                 name="favor_info",
                 type=str,
-                description="우대 공고에 작성한 내용을 전달합니다.",
+                description="우대사항",
             ),
-        ],
+        ]
     )
     def get(self, request):
         question = request.GET.get("question")
@@ -108,15 +128,17 @@ class GenerateResumeView(APIView):
         answers = request.GET.get("answers")
         free_answer = request.GET.get("free_answer")
         favor_info = request.GET.get("favor_info")
+        print(question)
 
         # 답변을 guideline + answer + free_answer로 구성
         total_answer = ''
-
+        print(answers)
         for index, answer in enumerate(answers):
             # answer 값이 존재하는 경우에만 처리
             if answer:
                 total_answer += (guidelines[index] + '\n' + answer + '\n\n')
-        total_answer += free_answer
+        if free_answer:
+            total_answer += free_answer
 
         # 예시 retrieve
         examples = retrieve_similar_answers(total_answer)
@@ -130,7 +152,7 @@ class GenerateResumeView(APIView):
         # 프롬프트 작성
         prompt = GENERATE_SELF_INTRODUCTION_PROMPT.format(
             question=question,
-            answers=total_answer,
+            answer=total_answer,
             favor_info=favor_info,
             examples=examples_str
         )

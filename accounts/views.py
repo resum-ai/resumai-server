@@ -61,6 +61,17 @@ def kakao_login(request):
             name="code", type=str, description="발급받은 카카오의 code 입니다."
         ),
     ],
+    examples=[
+        OpenApiExample(
+            response_only=True,
+            summary="Response Body Example입니다.",
+            name="success_example",
+            value={
+                "access_token": "string",
+                "code": "string",
+            },
+        ),
+    ]
 )
 @permission_classes([AllowAny])
 @api_view(["GET"])
