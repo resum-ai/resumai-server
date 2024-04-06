@@ -55,7 +55,7 @@ def kakao_login(request):
     )
 
 
-class KakaoLoginView(SocialLoginView):
+class KakaoLoginView(APIView):
 
     @extend_schema(
         summary="카카오 로그인 마무리",
