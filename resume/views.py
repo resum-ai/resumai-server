@@ -18,7 +18,7 @@ from drf_spectacular.utils import (
     OpenApiParameter,
 )
 
-from resume.serializers import GenerateResumeSerializer
+from resume.serializers import GenerateResumeSerializer, PostResumeSerializer
 from resume.utils import retrieve_similar_answers
 from utils.openai_call import get_chat_openai
 from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
@@ -151,3 +151,38 @@ class GenerateResumeView(APIView):
         generated_self_introduction_json = {"result": generated_self_introduction}
 
         return JsonResponse(generated_self_introduction_json)
+
+class PostResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="자기소개서 등록",
+        description="자기소개서를 등록합니다.",
+        responses={200: PostResumeSerializer},
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "position": {"type": "string"},
+                    "content": {"type": "string"},
+                    "due_date": {"type": "string"},
+                },
+            },
+        },
+    )
+    def post(self, request):
+        print(request.user)
+        serializer = PostResumeSerializer(data=request.data)
+
+        # 데이터 유효성 검사
+        if serializer.is_valid():
+            # 유효한 데이터의 경우, 자소서 저장
+            serializer.save(
+                user=request.user
+            )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # 데이터가 유효하지 않은 경우, 에러 메시지 반환
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
