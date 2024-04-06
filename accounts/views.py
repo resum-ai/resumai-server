@@ -50,6 +50,7 @@ CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
 @extend_schema(exclude=True)
 def kakao_login(request):
+    logger.fatal(f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code")
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
@@ -79,7 +80,7 @@ def kakao_login(request):
 @api_view(["GET"])
 def kakao_callback(request):
     code = request.GET.get("code")
-    logger.info(code)
+    logger.fatal(code)
 
     # Access Token Request
     token_req = requests.get(
@@ -87,14 +88,14 @@ def kakao_callback(request):
     )
 
     token_req_json = token_req.json()
-    logger.info(token_req_json)
+    logger.fatal(token_req_json)
 
     error = token_req_json.get("error")
     if error is not None:
         raise JSONDecodeError(error)
 
     access_token = token_req_json.get("access_token")
-    logger.info(access_token)
+    logger.fatal(access_token)
 
     # Email Request
     profile_request = requests.get(
