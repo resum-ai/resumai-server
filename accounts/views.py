@@ -79,6 +79,7 @@ def kakao_login(request):
 @api_view(["GET"])
 def kakao_callback(request):
     code = request.GET.get("code")
+    logger.info(code)
 
     # Access Token Request
     token_req = requests.get(
@@ -86,12 +87,14 @@ def kakao_callback(request):
     )
 
     token_req_json = token_req.json()
+    logger.info(token_req_json)
 
     error = token_req_json.get("error")
     if error is not None:
         raise JSONDecodeError(error)
 
     access_token = token_req_json.get("access_token")
+    logger.info(access_token)
 
     # Email Request
     profile_request = requests.get(

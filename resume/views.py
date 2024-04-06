@@ -26,6 +26,38 @@ from utils.openai_call import get_chat_openai
 from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
 
 
+class GetAllResumeView(APIView, PageNumberPagination):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="전체 자기소개서를 받아옵니다.",
+        description="사용자가 작성한 전체 자기소개서를 받아옵니다.",
+        responses={
+            200: inline_serializer(
+                name="GetAllResumeResponse",
+                fields={
+                    "count": serializers.IntegerField(),
+                    "next": serializers.URLField(),
+                    "previous": serializers.URLField(),
+                    "results": PostResumeSerializer(many=True),
+                },
+            )
+        },
+    )
+    def get(self, request):
+        # 현재 인증된 유저에게 속한 메모들을 조회
+        resumes = Resume.objects.filter(user=request.user)
+
+        # Pagination 적용
+        page = self.paginate_queryset(resumes, request, view=self)
+        if page is not None:
+            serializer = PostResumeSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Pagination이 적용되지 않은 경우(선택적)
+        serializer = PostResumeSerializer(resumes, many=True)
+        return Response(serializer.data)
+
 # Create your views here.
 class GetGuidelinesView(APIView):
     permission_classes = [IsAuthenticated]
