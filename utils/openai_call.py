@@ -7,7 +7,7 @@ env = environ.Env(DEBUG=(bool, False))
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
 def get_chat_openai(prompt, model="gpt-4"):

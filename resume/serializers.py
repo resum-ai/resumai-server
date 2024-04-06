@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class GenerateResumeSerializer(serializers.Serializer):
     question = serializers.CharField()
     guidelines = serializers.CharField()

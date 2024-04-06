@@ -26,7 +26,7 @@ from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
 
 # Create your views here.
 class GetGuidelinesView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary="가이드라인 생성",
@@ -53,17 +53,16 @@ class GetGuidelinesView(APIView):
             prompt = GUIDELINE_PROMPT.format(question=question)
             guideline_string = get_chat_openai(prompt)
             guideline_list = json.loads(guideline_string.replace("'", '"'))
-            guideline_json = {
-                "result": guideline_list
-            }
+            guideline_json = {"result": guideline_list}
             return JsonResponse(guideline_json)
         except Exception as e:
             print(e)
-            error_message = {'error': '가이드라인 생성 중 오류가 발생했습니다.'}
+            error_message = {"error": "가이드라인 생성 중 오류가 발생했습니다."}
             return JsonResponse(error_message, status=500)
 
+
 class GenerateResumeView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary="자기소개서 생성",
@@ -83,30 +82,20 @@ class GenerateResumeView(APIView):
                 description="기업이 제시한 질문",
             ),
             OpenApiParameter(
-                name='guidelines',
-                type={
-                    'type': 'array',
-                    'items': {
-                        'type': 'string'
-                    }
-                },
+                name="guidelines",
+                type={"type": "array", "items": {"type": "string"}},
                 location=OpenApiParameter.QUERY,
                 required=False,
-                style='form',
+                style="form",
                 explode=False,
                 description="제공된 가이드라인",
             ),
             OpenApiParameter(
-                name='answers',
-                type={
-                    'type': 'array',
-                    'items': {
-                        'type': 'string'
-                    }
-                },
+                name="answers",
+                type={"type": "array", "items": {"type": "string"}},
                 location=OpenApiParameter.QUERY,
                 required=False,
-                style='form',
+                style="form",
                 explode=False,
                 description="제공된 가이드라인에 대한 답변",
             ),
@@ -120,7 +109,7 @@ class GenerateResumeView(APIView):
                 type=str,
                 description="우대사항",
             ),
-        ]
+        ],
     )
     def get(self, request):
         question = request.GET.get("question")
@@ -131,12 +120,12 @@ class GenerateResumeView(APIView):
         print(question)
 
         # 답변을 guideline + answer + free_answer로 구성
-        total_answer = ''
+        total_answer = ""
         print(answers)
         for index, answer in enumerate(answers):
             # answer 값이 존재하는 경우에만 처리
             if answer:
-                total_answer += (guidelines[index] + '\n' + answer + '\n\n')
+                total_answer += guidelines[index] + "\n" + answer + "\n\n"
         if free_answer:
             total_answer += free_answer
 
@@ -154,16 +143,11 @@ class GenerateResumeView(APIView):
             question=question,
             answer=total_answer,
             favor_info=favor_info,
-            examples=examples_str
+            examples=examples_str,
         )
 
         # 자소서 생성
         generated_self_introduction = get_chat_openai(prompt)
-        generated_self_introduction_json = {
-            "result": generated_self_introduction
-        }
+        generated_self_introduction_json = {"result": generated_self_introduction}
 
         return JsonResponse(generated_self_introduction_json)
-
-
-

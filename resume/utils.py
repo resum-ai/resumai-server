@@ -4,7 +4,7 @@ import environ
 
 from pinecone import Pinecone
 
-pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
 from utils.openai_call import get_embedding
 
