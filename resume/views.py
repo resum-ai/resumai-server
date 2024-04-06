@@ -3,6 +3,7 @@ import logging
 
 from django.http import Http404
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,7 +19,8 @@ from drf_spectacular.utils import (
     OpenApiParameter,
 )
 
-from resume.serializers import GenerateResumeSerializer, PostResumeSerializer
+from resume.models import Resume
+from resume.serializers import GenerateResumeSerializer, PostResumeSerializer, UpdateResumeSerializer
 from resume.utils import retrieve_similar_answers
 from utils.openai_call import get_chat_openai
 from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
@@ -186,3 +188,29 @@ class PostResumeView(APIView):
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UpdateResumeView(APIView):
+    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
+
+    @extend_schema(
+        summary="자기소개서 업데이트",
+        request=UpdateResumeSerializer,
+        responses={200: PostResumeSerializer},
+    )
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        resume_id = kwargs.get('id')  # URL에서 resume의 id를 가져옵니다.
+
+        try:
+            resume = Resume.objects.get(id=resume_id, user=user)  # 요청한 사용자의 resume만 선택
+        except Resume.DoesNotExist:
+            return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PostResumeSerializer(
+            resume, data=request.data, partial=True
+        )  # 업데이트 대상 인스턴스를 지정하고 부분 업데이트 가능
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
