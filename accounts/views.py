@@ -45,7 +45,8 @@ env = environ.Env()
 env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
-KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
+# KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
+KAKAO_CALLBACK_URI="http://localhost:5173/accounts/kakao/callback"
 # KAKAO_CALLBACK_URI = "http://api.resumai.kr/accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
@@ -93,15 +94,16 @@ class KakaoLoginView(SocialLoginView):
     )
     def post(self, request, *args, **kwargs):
         code = request.data.get("code")
-        print(code)
 
         if not code:
             return Response({"error": "Code is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 카카오 인가코드를 사용해 access_token 획득
         token_res = requests.get(f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}")
+        logger.fatal(token_res)
 
         if token_res.status_code != 200:
+            logger.fatal(token_res.json())
             return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
 
         token_json = token_res.json()
