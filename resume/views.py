@@ -20,7 +20,11 @@ from drf_spectacular.utils import (
 )
 
 from resume.models import Resume
-from resume.serializers import GenerateResumeSerializer, PostResumeSerializer, UpdateResumeSerializer
+from resume.serializers import (
+    GenerateResumeSerializer,
+    PostResumeSerializer,
+    UpdateResumeSerializer,
+)
 from resume.utils import retrieve_similar_answers
 from utils.openai_call import get_chat_openai
 from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
@@ -57,6 +61,7 @@ class GetAllResumeView(APIView, PageNumberPagination):
         # Pagination이 적용되지 않은 경우(선택적)
         serializer = PostResumeSerializer(resumes, many=True)
         return Response(serializer.data)
+
 
 # Create your views here.
 class GetGuidelinesView(APIView):
@@ -186,6 +191,7 @@ class GenerateResumeView(APIView):
 
         return JsonResponse(generated_self_introduction_json)
 
+
 class PostResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -220,6 +226,7 @@ class PostResumeView(APIView):
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class UpdateResumeView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
@@ -230,12 +237,16 @@ class UpdateResumeView(APIView):
     )
     def put(self, request, *args, **kwargs):
         user = request.user
-        resume_id = kwargs.get('id')  # URL에서 resume의 id를 가져옵니다.
+        resume_id = kwargs.get("id")  # URL에서 resume의 id를 가져옵니다.
 
         try:
-            resume = Resume.objects.get(id=resume_id, user=user)  # 요청한 사용자의 resume만 선택
+            resume = Resume.objects.get(
+                id=resume_id, user=user
+            )  # 요청한 사용자의 resume만 선택
         except Resume.DoesNotExist:
-            return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = PostResumeSerializer(
             resume, data=request.data, partial=True
@@ -247,20 +258,30 @@ class UpdateResumeView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ScrapResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        resume_id = kwargs.get('id', None)  # URL로부터 자기소개서 id를 받아옵니다.
+        resume_id = kwargs.get("id", None)  # URL로부터 자기소개서 id를 받아옵니다.
         if not resume_id:
-            return Response({'error': 'Resume ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Resume ID is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             resume = Resume.objects.get(id=resume_id)
             # is_liked 필드의 값을 반전시킵니다.
             resume.is_liked = not resume.is_liked
-            resume.save(update_fields=['is_liked'])  # 업데이트할 필드를 명시적으로 지정합니다.
+            resume.save(
+                update_fields=["is_liked"]
+            )  # 업데이트할 필드를 명시적으로 지정합니다.
 
-            return Response({'id': resume_id, 'is_liked': resume.is_liked}, status=status.HTTP_200_OK)
+            return Response(
+                {"id": resume_id, "is_liked": resume.is_liked},
+                status=status.HTTP_200_OK,
+            )
         except Resume.DoesNotExist:
-            return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
+            )

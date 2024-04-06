@@ -2,35 +2,26 @@ import os
 
 import environ
 from pathlib import Path
-from django.db import transaction
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiResponse,
     OpenApiExample,
     OpenApiParameter,
 )
-from django.http import JsonResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 import requests
 from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
-from json.decoder import JSONDecodeError
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
-from allauth.socialaccount.providers.kakao import views as kakao_view
-from .models import CustomUser
 from .serializers import (
     UserInfoUpdateSerializer,
     GetUserInfoSerializer,
-    KakaoTokenSerializer,
 )
 import logging
 
@@ -46,19 +37,23 @@ env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
 # KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
-KAKAO_CALLBACK_URI="http://localhost:5173/accounts/kakao/callback"
+KAKAO_CALLBACK_URI = "http://localhost:5173/accounts/kakao/callback"
 # KAKAO_CALLBACK_URI = "http://api.resumai.kr/accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
 User = get_user_model()
 
+
 @extend_schema(exclude=True)
 def kakao_login(request):
-    logger.fatal(f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code")
+    logger.fatal(
+        f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
+    )
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
+
 
 class KakaoLoginView(SocialLoginView):
 
@@ -79,15 +74,15 @@ class KakaoLoginView(SocialLoginView):
                 summary="Response Body Example입니다.",
                 name="success_example",
                 value={
-                      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b",
-                      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0",
-                      "user_info": {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b",
+                    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0",
+                    "user_info": {
                         "id": 6,
                         "email": "yjoonjang@naver.com",
                         "username": "장영준",
                         "profile_image": "https://k.kakaocdn.net/dn/cI6qGf/btsCovDyklV/ydaQojxohw6VnLxtcdKwuk/img_640x640.jpg",
-                        "created": False
-                      }
+                        "is_created": False,
+                    },
                 },
             ),
         ],
@@ -96,27 +91,35 @@ class KakaoLoginView(SocialLoginView):
         code = request.data.get("code")
 
         if not code:
-            return Response({"error": "Code is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Code is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # 카카오 인가코드를 사용해 access_token 획득
-        token_res = requests.get(f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}")
+        token_res = requests.get(
+            f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={REST_API_KEY}&client_secret={CLIENT_SECRET}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
+        )
         logger.fatal(token_res)
 
         if token_res.status_code != 200:
             logger.fatal(token_res.json())
-            return Response({"error": "Failed to obtain access token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Failed to obtain access token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         token_json = token_res.json()
         access_token = token_json.get("access_token")
 
         # 카카오 access_token으로부터 사용자 정보 획득
-        headers = {
-            "Authorization": f"Bearer {access_token}"
-        }
+        headers = {"Authorization": f"Bearer {access_token}"}
         profile_res = requests.get("https://kapi.kakao.com/v2/user/me", headers=headers)
 
         if profile_res.status_code != 200:
-            return Response({"error": "Failed to obtain user information"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Failed to obtain user information"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         profile_json = profile_res.json()
 
@@ -125,7 +128,14 @@ class KakaoLoginView(SocialLoginView):
         profile_image = profile_json.get("properties")["profile_image"]
         email = profile_json.get("kakao_account")["email"]
 
-        user, created = User.objects.get_or_create(email=email, defaults={"username": f"{nickname}", "kakao_oid": kakao_oid, "profile_image": f"{profile_image}"})
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": f"{nickname}",
+                "kakao_oid": kakao_oid,
+                "profile_image": f"{profile_image}",
+            },
+        )
 
         # 사용자에 대한 토큰 생성
         refresh = RefreshToken.for_user(user)
@@ -137,13 +147,11 @@ class KakaoLoginView(SocialLoginView):
                 "email": user.email,
                 "username": user.username,
                 "profile_image": user.profile_image,
-                "is_created": created
-            }
+                "is_created": created,
+            },
         }
 
         return Response(data, status=status.HTTP_200_OK)
-
-
 
 
 class UpdateUserInfoView(APIView):
