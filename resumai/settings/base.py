@@ -10,10 +10,7 @@ pymysql.install_as_MySQLdb()
 
 
 env = environ.Env(DEBUG=(bool, False))
-
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-print(BASE_DIR)
-
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
@@ -37,6 +34,7 @@ INSTALLED_APPS = [
     "resumai",
     "accounts",
     "memos",
+    "resume",
     # django-rest-auth
     "rest_framework",
     "rest_framework_simplejwt",

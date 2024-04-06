@@ -47,11 +47,13 @@ KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
 CLIENT_SECRET = env("KAKAO_CLIENT_SECRET_KEY")
 
+
 @extend_schema(exclude=True)
 def kakao_login(request):
     return redirect(
         f"https://kauth.kakao.com/oauth/authorize?client_id={REST_API_KEY}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code"
     )
+
 
 @extend_schema(
     summary="카카오 로그인",
@@ -59,6 +61,17 @@ def kakao_login(request):
     parameters=[
         OpenApiParameter(
             name="code", type=str, description="발급받은 카카오의 code 입니다."
+        ),
+    ],
+    examples=[
+        OpenApiExample(
+            response_only=True,
+            summary="Response Body Example입니다.",
+            name="success_example",
+            value={
+                "access_token": "string",
+                "code": "string",
+            },
         ),
     ],
 )
