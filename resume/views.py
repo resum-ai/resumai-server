@@ -214,3 +214,21 @@ class UpdateResumeView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ScrapResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        resume_id = kwargs.get('id', None)  # URL로부터 자기소개서 id를 받아옵니다.
+        if not resume_id:
+            return Response({'error': 'Resume ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            resume = Resume.objects.get(id=resume_id)
+            # is_liked 필드의 값을 반전시킵니다.
+            resume.is_liked = not resume.is_liked
+            resume.save(update_fields=['is_liked'])  # 업데이트할 필드를 명시적으로 지정합니다.
+
+            return Response({'id': resume_id, 'is_liked': resume.is_liked}, status=status.HTTP_200_OK)
+        except Resume.DoesNotExist:
+            return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
