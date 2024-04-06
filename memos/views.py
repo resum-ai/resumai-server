@@ -145,6 +145,7 @@ class CustomPagination(PageNumberPagination):
     def get_page_size(self, request):
         return super().get_page_size(request)
 
+
 class UpdateMemoView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
@@ -155,12 +156,16 @@ class UpdateMemoView(APIView):
     )
     def put(self, request, *args, **kwargs):
         user = request.user
-        resume_id = kwargs.get('id')  # URL에서 resume의 id를 가져옵니다.
+        resume_id = kwargs.get("id")  # URL에서 resume의 id를 가져옵니다.
 
         try:
-            resume = Memo.objects.get(id=resume_id, user=user)  # 요청한 사용자의 resume만 선택
+            resume = Memo.objects.get(
+                id=resume_id, user=user
+            )  # 요청한 사용자의 resume만 선택
         except Memo.DoesNotExist:
-            return Response({'error': 'Resume not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = PostMemoSerializer(
             resume, data=request.data, partial=True
@@ -171,6 +176,7 @@ class UpdateMemoView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SearchMemoView(APIView, CustomPagination):
     permission_classes = [IsAuthenticated]
