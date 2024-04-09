@@ -25,7 +25,7 @@ from resume.serializers import (
     PostResumeSerializer,
     UpdateResumeSerializer,
 )
-from resume.utils import retrieve_similar_answers
+from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
 from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
 
@@ -95,8 +95,7 @@ class GetGuidelinesView(APIView):
             guideline_json = {"result": guideline_list}
             return JsonResponse(guideline_json)
         except Exception as e:
-            print(e)
-            error_message = {"error": "가이드라인 생성 중 오류가 발생했습니다."}
+            error_message = {"error": "가이드라인 생성 중 오류가 발생했습니다. 질문을 올바르게 입력해 주세요."}
             return JsonResponse(error_message, status=500)
 
 
@@ -156,11 +155,9 @@ class GenerateResumeView(APIView):
         answers = request.GET.get("answers")
         free_answer = request.GET.get("free_answer")
         favor_info = request.GET.get("favor_info")
-        print(question)
 
         # 답변을 guideline + answer + free_answer로 구성
         total_answer = ""
-        print(answers)
         for index, answer in enumerate(answers):
             # answer 값이 존재하는 경우에만 처리
             if answer:
@@ -170,6 +167,10 @@ class GenerateResumeView(APIView):
 
         # 예시 retrieve
         examples = retrieve_similar_answers(total_answer)
+        if len(examples) == 0:
+            error_message = {"error": "유사한 질문을 가져오는 도중 문제가 발생했습니다. 다시 시도해 주세요."}
+            return JsonResponse(error_message, status=500)
+
         examples_str = "\n\n".join(
             [
                 f"예시{i}) \nQuestion: {ex['metadata']['question']} \nAnswer: {ex['metadata']['answer']}"
@@ -189,7 +190,7 @@ class GenerateResumeView(APIView):
         generated_self_introduction = get_chat_openai(prompt)
         generated_self_introduction_json = {"result": generated_self_introduction}
 
-        return JsonResponse(generated_self_introduction_json)
+        return JsonResponse(generated_self_introduction_json, status=200)
 
 
 class PostResumeView(APIView):
@@ -212,7 +213,6 @@ class PostResumeView(APIView):
         },
     )
     def post(self, request):
-        print(request.user)
         serializer = PostResumeSerializer(data=request.data)
 
         # 데이터 유효성 검사
@@ -285,3 +285,30 @@ class ScrapResumeView(APIView):
             return Response(
                 {"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+class ChatView(APIView):
+
+    @extend_schema(
+        summary="챗봇 대화",
+        description="챗봇과의 대화를 통해 자기소개서를 업데이트합니다.",
+        responses={200: PostResumeSerializer},
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "position": {"type": "string"},
+                    "content": {"type": "string"},
+                    "due_date": {"type": "string"},
+                },
+            },
+        },
+    )
+    def post(self, request):
+        query = request.data.query
+        langchain_answer = run_llm(query=query)
+
+        return Response(
+            {"answer": langchain_answer},
+            status=status.HTTP_200_OK,
+        )
