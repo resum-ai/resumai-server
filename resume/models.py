@@ -15,3 +15,9 @@ class Resume(models.Model):
 
     def __str__(self):
         return self.title
+
+class ChatHistory(models.Model):
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
+    # history =
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
