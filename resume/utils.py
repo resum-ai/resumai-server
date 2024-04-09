@@ -33,5 +33,6 @@ def run_llm(query: str, chat_history: list[dict[str, any]]) -> any:
     conversation = ConversationChain(
         llm=chat,
         verbose=True,
+        chat_history=chat_history
     )
     return conversation.predict(input=query)

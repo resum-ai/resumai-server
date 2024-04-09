@@ -149,7 +149,20 @@ class GenerateResumeView(APIView):
             ),
         ],
     )
-    def get(self, request):
+    def post(self, request):
+        serializer = PostResumeSerializer(data=request.data)
+
+        # 데이터 유효성 검사
+        if serializer.is_valid():
+            # 유효한 데이터의 경우, 자소서 저장
+            serializer.save(
+                user=request.user
+            )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # 데이터가 유효하지 않은 경우, 에러 메시지 반환
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         question = request.GET.get("question")
         guidelines = request.GET.get("guidelines")
         answers = request.GET.get("answers")
@@ -291,24 +304,23 @@ class ChatView(APIView):
     @extend_schema(
         summary="챗봇 대화",
         description="챗봇과의 대화를 통해 자기소개서를 업데이트합니다.",
-        responses={200: PostResumeSerializer},
+        responses={200: {
+            "answer": "string"
+        }},
         request={
             "application/json": {
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string"},
-                    "position": {"type": "string"},
-                    "content": {"type": "string"},
-                    "due_date": {"type": "string"},
+                    "query": {"type": "string"},
                 },
             },
         },
     )
     def post(self, request):
         query = request.data.query
-        langchain_answer = run_llm(query=query)
+        chatbot_answer = run_llm(query=query)
 
         return Response(
-            {"answer": langchain_answer},
+            {"answer": chatbot_answer},
             status=status.HTTP_200_OK,
         )
