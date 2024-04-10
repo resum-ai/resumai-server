@@ -216,51 +216,75 @@ class GenerateResumeView(APIView):
         # 데이터 유효성 검사
         if serializer.is_valid():
             # 유효한 데이터의 경우, 자소서 저장
-            serializer.save(
+            saved_instance = serializer.save(
                 user=request.user
             )  # 현재 로그인한 사용자를 자소서의 user 필드에 저장
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({"id": saved_instance.id}, status=status.HTTP_201_CREATED)
         else:
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PostResumeView(APIView):
+# class PostResumeView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     @extend_schema(
+#         summary="자기소개서 등록",
+#         description="자기소개서를 등록합니다.",
+#         responses={200: PostResumeSerializer},
+#         request={
+#             "application/json": {
+#                 "type": "object",
+#                 "properties": {
+#                     "title": {"type": "string"},
+#                     "position": {"type": "string"},
+#                     "content": {"type": "string"},
+#                     "due_date": {"type": "string"},
+#                 },
+#             },
+#         },
+#     )
+#     def post(self, request):
+#         serializer = PostResumeSerializer(data=request.data)
+#
+#         # 데이터 유효성 검사
+#         if serializer.is_valid():
+#             # 유효한 데이터의 경우, 자소서 저장
+#             serializer.save(
+#                 user=request.user
+#             )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         else:
+#             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GetResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(
-        summary="자기소개서 등록",
-        description="자기소개서를 등록합니다.",
-        responses={200: PostResumeSerializer},
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string"},
-                    "position": {"type": "string"},
-                    "content": {"type": "string"},
-                    "due_date": {"type": "string"},
-                },
-            },
-        },
-    )
-    def post(self, request):
-        serializer = PostResumeSerializer(data=request.data)
+    def get_object(self, pk, user):
+        try:
+            resume = Resume.objects.get(pk=pk)
+            # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
+            if resume.user != user:
+                raise Http404("해당 메모에 접근할 권한이 없습니다.")
+            return resume
+        except resume.DoesNotExist:
+            raise Http404
 
-        # 데이터 유효성 검사
-        if serializer.is_valid():
-            # 유효한 데이터의 경우, 자소서 저장
-            serializer.save(
-                user=request.user
-            )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            # 데이터가 유효하지 않은 경우, 에러 메시지 반환
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @extend_schema(
+        summary="특정 자소서를 받아옵니다.",
+        description="사용자가 작성한 특정 자소서의 디테일을 받아옵니다.",
+        responses={200: PostResumeSerializer},
+    )
+    def get(self, request, pk, format=None):
+        print(pk)
+        resume = self.get_object(pk, request.user)
+        serializer = PostResumeSerializer(resume)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UpdateResumeView(APIView):
-    permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary="자기소개서 업데이트",
@@ -343,3 +367,4 @@ class ChatView(APIView):
             {"answer": chatbot_answer},
             status=status.HTTP_200_OK,
         )
+
