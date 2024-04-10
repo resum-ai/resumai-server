@@ -14,6 +14,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
+
 def retrieve_similar_answers(user_qa):
     try:
         pc = Pinecone()
@@ -28,11 +29,8 @@ def retrieve_similar_answers(user_qa):
         print(e)
         return []
 
+
 def run_llm(query: str, chat_history: list[dict[str, any]]) -> any:
     chat = ChatOpenAI(verbose=True, temperature=0, model_name="gpt-4")
-    conversation = ConversationChain(
-        llm=chat,
-        verbose=True,
-        chat_history=chat_history
-    )
+    conversation = ConversationChain(llm=chat, verbose=True, chat_history=chat_history)
     return conversation.predict(input=query)

@@ -95,7 +95,9 @@ class GetGuidelinesView(APIView):
             guideline_json = {"result": guideline_list}
             return JsonResponse(guideline_json)
         except Exception as e:
-            error_message = {"error": "가이드라인 생성 중 오류가 발생했습니다. 질문을 올바르게 입력해 주세요."}
+            error_message = {
+                "error": "가이드라인 생성 중 오류가 발생했습니다. 질문을 올바르게 입력해 주세요."
+            }
             return JsonResponse(error_message, status=500)
 
 
@@ -105,9 +107,7 @@ class GenerateResumeView(APIView):
     @extend_schema(
         summary="자기소개서 생성",
         description="답변을 기반으로 자기소개서를 생성합니다.",
-        responses={
-            200: PostResumeSerializer
-        },
+        responses={200: PostResumeSerializer},
         parameters=[
             OpenApiParameter(
                 name="title",
@@ -123,7 +123,7 @@ class GenerateResumeView(APIView):
                 name="due_date",
                 type=str,
                 style="date",
-                description="공고 마감기한. 그냥 str 형식으로 \"2024-04-10\" 이렇게 보내주삼",
+                description='공고 마감기한. 그냥 str 형식으로 "2024-04-10" 이렇게 보내주삼',
             ),
             OpenApiParameter(
                 name="question",
@@ -182,7 +182,9 @@ class GenerateResumeView(APIView):
         # 예시 retrieve
         examples = retrieve_similar_answers(total_answer)
         if len(examples) == 0:
-            error_message = {"error": "유사한 질문을 가져오는 도중 문제가 발생했습니다. 다시 시도해 주세요."}
+            error_message = {
+                "error": "유사한 질문을 가져오는 도중 문제가 발생했습니다. 다시 시도해 주세요."
+            }
             return JsonResponse(error_message, status=500)
 
         examples_str = "\n\n".join(
@@ -203,15 +205,17 @@ class GenerateResumeView(APIView):
         # 자소서 생성
         generated_self_introduction = get_chat_openai(prompt)
 
-        serializer = PostResumeSerializer(data={
-            "title": title,
-            "position": position,
-            "question": question,
-            "content": generated_self_introduction,
-            "due_date": due_date,
-            "is_finished": False,
-            "is_liked": False
-        })
+        serializer = PostResumeSerializer(
+            data={
+                "title": title,
+                "position": position,
+                "question": question,
+                "content": generated_self_introduction,
+                "due_date": due_date,
+                "is_finished": False,
+                "is_liked": False,
+            }
+        )
 
         # 데이터 유효성 검사
         if serializer.is_valid():
@@ -257,6 +261,7 @@ class GenerateResumeView(APIView):
 #         else:
 #             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
 #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class GetResumeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -342,14 +347,13 @@ class ScrapResumeView(APIView):
                 {"error": "Resume not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
+
 class ChatView(APIView):
 
     @extend_schema(
         summary="챗봇 대화",
         description="챗봇과의 대화를 통해 자기소개서를 업데이트합니다.",
-        responses={200: {
-            "answer": "string"
-        }},
+        responses={200: {"answer": "string"}},
         request={
             "application/json": {
                 "type": "object",
@@ -367,4 +371,3 @@ class ChatView(APIView):
             {"answer": chatbot_answer},
             status=status.HTTP_200_OK,
         )
-
