@@ -3,7 +3,7 @@ from pathlib import Path
 import environ
 
 from pinecone import Pinecone
-# from utils.openai_call import get_embedding
+from utils.openai_call import get_embedding
 
 from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import ConversationChain
