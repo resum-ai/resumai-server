@@ -20,6 +20,7 @@ class Resume(models.Model):
 
 class ChatHistory(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE)
-    # history =
+    query = models.TextField(null=True)  # 사용자의 질문
+    response = models.TextField(null=True)  # 챗봇의 응답
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

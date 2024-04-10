@@ -19,7 +19,7 @@ from drf_spectacular.utils import (
     OpenApiParameter,
 )
 
-from resume.models import Resume
+from resume.models import Resume, ChatHistory
 from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
@@ -27,14 +27,14 @@ from resume.serializers import (
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
-from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT
+from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT, CHAT_PROMPT
 
 
 class GetAllResumeView(APIView, PageNumberPagination):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="전체 자기소개서를 받아옵니다.",
+        summary="전체 자소서 조회",
         description="사용자가 작성한 전체 자기소개서를 받아옵니다.",
         responses={
             200: inline_serializer(
@@ -105,7 +105,7 @@ class GenerateResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="자기소개서 생성",
+        summary="자소서 생성",
         description="답변을 기반으로 자기소개서를 생성합니다.",
         responses={200: PostResumeSerializer},
         parameters=[
@@ -222,7 +222,11 @@ class GenerateResumeView(APIView):
             # 유효한 데이터의 경우, 자소서 저장
             saved_instance = serializer.save(
                 user=request.user
-            )  # 현재 로그인한 사용자를 자소서의 user 필드에 저장
+            )
+            resume = get_object_or_404(Resume, pk=saved_instance.id)
+            new_chat_history = ChatHistory(resume=resume, query=prompt, response=generated_self_introduction)
+            new_chat_history.save()
+
             return Response({"id": saved_instance.id}, status=status.HTTP_201_CREATED)
         else:
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
@@ -277,12 +281,11 @@ class GetResumeView(APIView):
             raise Http404
 
     @extend_schema(
-        summary="특정 자소서를 받아옵니다.",
+        summary="특정 자소서 조회",
         description="사용자가 작성한 특정 자소서의 디테일을 받아옵니다.",
         responses={200: PostResumeSerializer},
     )
     def get(self, request, pk, format=None):
-        print(pk)
         resume = self.get_object(pk, request.user)
         serializer = PostResumeSerializer(resume)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -292,7 +295,7 @@ class UpdateResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="자기소개서 업데이트",
+        summary="자소서 업데이트",
         request=UpdateResumeSerializer,
         responses={200: PostResumeSerializer},
     )
@@ -323,6 +326,19 @@ class UpdateResumeView(APIView):
 class ScrapResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="자소서 스크랩",
+        description="특정 자기소개서를 스크랩합니다.",
+        responses={
+            200: inline_serializer(
+                name="ScrapResumeResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "is_liked": serializers.BooleanField(),
+                },
+            )
+        },
+    )
     def get(self, request, *args, **kwargs):
         resume_id = kwargs.get("id", None)  # URL로부터 자기소개서 id를 받아옵니다.
         if not resume_id:
@@ -349,10 +365,11 @@ class ScrapResumeView(APIView):
 
 
 class ChatView(APIView):
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary="챗봇 대화",
-        description="챗봇과의 대화를 통해 자기소개서를 업데이트합니다.",
+        description="챗봇과의 대화를 통해 자기소개서를 첨삭 받습니다..",
         responses={200: {"answer": "string"}},
         request={
             "application/json": {
@@ -363,11 +380,26 @@ class ChatView(APIView):
             },
         },
     )
-    def post(self, request):
-        query = request.data.query
-        chatbot_answer = run_llm(query=query)
+    def post(self, request, id):
+        query = request.data.get("query", "")
 
-        return JsonResponse(
-            {"answer": chatbot_answer},
-            status=status.HTTP_200_OK,
-        )
+        resume = get_object_or_404(Resume, pk=id)
+
+        # 해당 resume에 대한 이전 대화 내역을 가져옴
+        chat_history_instances = ChatHistory.objects.filter(resume=resume)
+        chat_history = [{"query": instance.query, "response": instance.response} for instance in chat_history_instances]
+
+        if len(chat_history) == 1:
+            query = CHAT_PROMPT.format(
+                query=query
+            )
+
+        # 챗봇으로부터 응답을 받음
+        chatbot_response = run_llm(query=query, chat_history=chat_history)
+
+        # 새로운 대화 기록을 생성하고 저장
+        new_chat_history = ChatHistory(resume=resume, query=query, response=chatbot_response)
+        new_chat_history.save()
+
+        # 챗봇의 응답을 반환
+        return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)

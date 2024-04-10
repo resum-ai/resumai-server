@@ -54,7 +54,7 @@ class GetAllMemoView(APIView, PageNumberPagination):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="전체 메모를 받아옵니다.",
+        summary="전체 메모 조회",
         description="사용자가 작성한 전체 메모를 받아옵니다.",
         responses={
             200: inline_serializer(
@@ -97,7 +97,7 @@ class GetMemoDetailView(APIView):
             raise Http404
 
     @extend_schema(
-        summary="특정 메모를 받아옵니다.",
+        summary="특정 메모 조회",
         description="사용자가 작성한 특정 메모의 디테일 받아옵니다.",
         responses={200: MemoSerializer},
     )
@@ -150,7 +150,7 @@ class UpdateMemoView(APIView):
     permission_classes = [IsAuthenticated]  # 인증된 사용자만 접근 가능하도록 설정
 
     @extend_schema(
-        summary="자기소개서 업데이트",
+        summary="메모 업데이트",
         request=PostMemoSerializer,
         responses={200: PostMemoSerializer},
     )

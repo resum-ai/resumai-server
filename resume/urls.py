@@ -9,6 +9,6 @@ urlpatterns = [
     # path("", views.PostResumeView.as_view(), name="post_resume"),
     path("/update/<int:id>", views.UpdateResumeView.as_view(), name="update_resume"),
     path("/scrap/<int:id>", views.ScrapResumeView.as_view(), name="scrap_resume"),
-    path("/chat", views.ChatView.as_view(), name="chat"),
+    path("/<int:id>/chat", views.ChatView.as_view(), name="chat"),
     path("/<int:pk>", views.GetResumeView.as_view(), name="update_resume"),
 ]
