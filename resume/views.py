@@ -27,7 +27,11 @@ from resume.serializers import (
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
-from utils.prompts import GUIDELINE_PROMPT, GENERATE_SELF_INTRODUCTION_PROMPT, CHAT_PROMPT
+from utils.prompts import (
+    GUIDELINE_PROMPT,
+    GENERATE_SELF_INTRODUCTION_PROMPT,
+    CHAT_PROMPT,
+)
 
 
 class GetAllResumeView(APIView, PageNumberPagination):
@@ -220,11 +224,11 @@ class GenerateResumeView(APIView):
         # 데이터 유효성 검사
         if serializer.is_valid():
             # 유효한 데이터의 경우, 자소서 저장
-            saved_instance = serializer.save(
-                user=request.user
-            )
+            saved_instance = serializer.save(user=request.user)
             resume = get_object_or_404(Resume, pk=saved_instance.id)
-            new_chat_history = ChatHistory(resume=resume, query=prompt, response=generated_self_introduction)
+            new_chat_history = ChatHistory(
+                resume=resume, query=prompt, response=generated_self_introduction
+            )
             new_chat_history.save()
 
             return Response({"id": saved_instance.id}, status=status.HTTP_201_CREATED)
@@ -387,18 +391,21 @@ class ChatView(APIView):
 
         # 해당 resume에 대한 이전 대화 내역을 가져옴
         chat_history_instances = ChatHistory.objects.filter(resume=resume)
-        chat_history = [{"query": instance.query, "response": instance.response} for instance in chat_history_instances]
+        chat_history = [
+            {"query": instance.query, "response": instance.response}
+            for instance in chat_history_instances
+        ]
 
         if len(chat_history) == 1:
-            query = CHAT_PROMPT.format(
-                query=query
-            )
+            query = CHAT_PROMPT.format(query=query)
 
         # 챗봇으로부터 응답을 받음
         chatbot_response = run_llm(query=query, chat_history=chat_history)
 
         # 새로운 대화 기록을 생성하고 저장
-        new_chat_history = ChatHistory(resume=resume, query=query, response=chatbot_response)
+        new_chat_history = ChatHistory(
+            resume=resume, query=query, response=chatbot_response
+        )
         new_chat_history.save()
 
         # 챗봇의 응답을 반환
