@@ -8,5 +8,5 @@ urlpatterns = [
     path("/<int:pk>", views.GetMemoDetailView.as_view(), name="memo-detail"),
     path("/update/<int:pk>", views.UpdateMemoView.as_view(), name="scrap-memo"),
     path("/delete/<int:pk>", views.DeleteMemoView.as_view(), name="delete-memo"),
-    path("/search", views.SearchMemoView.as_view(), name="search-memo"),
+    path("/search", views.SearchMemoView.as_view(), name="search-memo")
 ]

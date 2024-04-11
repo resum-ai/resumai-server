@@ -124,7 +124,7 @@ class DeleteMemoView(APIView):
         summary="메모 삭제",
         description="특정 메모를 삭제합니다. 메모를 작성한 사용자만 해당 메모를 삭제할 수 있습니다.",
         responses={
-            204: None,  # 성공적으로 삭제되었을 때, 특별한 응답 본문은 없음
+            204: {"description": "메모가 성공적으로 삭제되었습니다."}
             404: {"description": "해당 메모를 찾을 수 없거나 삭제할 권한이 없습니다."},
         },
     )

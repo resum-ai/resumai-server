@@ -11,4 +11,6 @@ urlpatterns = [
     path("/scrap/<int:id>", views.ScrapResumeView.as_view(), name="scrap_resume"),
     path("/<int:id>/chat", views.ChatView.as_view(), name="chat"),
     path("/<int:pk>", views.GetResumeView.as_view(), name="update_resume"),
+    path("/<int:pk>/chatHistory", views.GetChatHistoryView.as_view(), name="get_chat_history"),
+    path("/delete/<int:pk>", views.DeleteResumeView.as_view(), name="delete_resume")
 ]

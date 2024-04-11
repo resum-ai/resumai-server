@@ -23,7 +23,7 @@ from resume.models import Resume, ChatHistory
 from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
-    UpdateResumeSerializer,
+    UpdateResumeSerializer, ChatHistorySerializer,
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
@@ -410,3 +410,65 @@ class ChatView(APIView):
 
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
+
+class GetChatHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="채팅 내역 조회",
+        description="채팅 내역을 반환합니다.",
+        responses={
+            200: inline_serializer(
+                name="GetChatHistoryResponse",
+                fields={
+                    "count": serializers.IntegerField(),
+                    "next": serializers.URLField(),
+                    "previous": serializers.URLField(),
+                    "results": ChatHistorySerializer(many=True),
+                },
+            )
+        },
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=int,
+                description="페이지 수",
+            ),
+        ]
+    )
+    def get(self, request, pk):
+        resume = get_object_or_404(Resume, pk=pk)
+        queryset = ChatHistory.objects.filter(resume=resume).order_by('-created_at').reverse()
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = ChatHistorySerializer(result_page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
+
+class DeleteResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, user):
+        try:
+            resume = Resume.objects.get(pk=pk)
+            # 메모를 작성한 유저와 현재 요청 유저가 동일한지 확인
+            if resume.user != user:
+                raise Http404("해당 메모를 제거할 자격이 없습니다.")
+            return resume
+        except Resume.DoesNotExist:
+            raise Http404
+
+    @extend_schema(
+        summary="자소서 삭제",
+        description="특정 자소서를 삭제합니다. 자소서를 작성한 사용자만 해당 자소서를 삭제할 수 있습니다.",
+        responses={
+            204: {"description": "자기소개서가 성공적으로 삭제되었습니다."},
+            404: {"description": "해당 자소서를 찾을 수 없거나 삭제할 권한이 없습니다."},
+        },
+    )
+    def delete(self, request, pk, format=None):
+        resume = self.get_object(pk, request.user)
+        resume.delete()
+        return JsonResponse(
+            {"status": "success", "message": "Resume deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
+        )

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from resume.models import Resume
+from resume.models import Resume, ChatHistory
 
 
 class GenerateResumeSerializer(serializers.Serializer):
@@ -43,3 +43,12 @@ class UpdateResumeSerializer(serializers.ModelSerializer):
             "is_liked",
         )
         read_only_fields = ("created_at", "updated_at")
+
+class ChatHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatHistory
+        fields = (
+            "query",
+            "response",
+            "created_at"
+        )
