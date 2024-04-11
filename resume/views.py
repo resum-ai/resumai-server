@@ -23,7 +23,8 @@ from resume.models import Resume, ChatHistory
 from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
-    UpdateResumeSerializer, ChatHistorySerializer,
+    UpdateResumeSerializer,
+    ChatHistorySerializer,
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
@@ -411,6 +412,7 @@ class ChatView(APIView):
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
 
+
 class GetChatHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -434,15 +436,20 @@ class GetChatHistoryView(APIView):
                 type=int,
                 description="페이지 수",
             ),
-        ]
+        ],
     )
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
-        queryset = ChatHistory.objects.filter(resume=resume).order_by('-created_at').reverse()
+        queryset = (
+            ChatHistory.objects.filter(resume=resume).order_by("-created_at").reverse()
+        )
         paginator = PageNumberPagination()
         result_page = paginator.paginate_queryset(queryset, request)
-        serializer = ChatHistorySerializer(result_page, many=True, context={'request': request})
+        serializer = ChatHistorySerializer(
+            result_page, many=True, context={"request": request}
+        )
         return paginator.get_paginated_response(serializer.data)
+
 
 class DeleteResumeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -462,7 +469,9 @@ class DeleteResumeView(APIView):
         description="특정 자소서를 삭제합니다. 자소서를 작성한 사용자만 해당 자소서를 삭제할 수 있습니다.",
         responses={
             204: {"description": "자기소개서가 성공적으로 삭제되었습니다."},
-            404: {"description": "해당 자소서를 찾을 수 없거나 삭제할 권한이 없습니다."},
+            404: {
+                "description": "해당 자소서를 찾을 수 없거나 삭제할 권한이 없습니다."
+            },
         },
     )
     def delete(self, request, pk, format=None):

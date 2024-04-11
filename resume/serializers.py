@@ -44,11 +44,8 @@ class UpdateResumeSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("created_at", "updated_at")
 
+
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
-        fields = (
-            "query",
-            "response",
-            "created_at"
-        )
+        fields = ("query", "response", "created_at")
