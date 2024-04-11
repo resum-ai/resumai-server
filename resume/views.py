@@ -23,7 +23,7 @@ from resume.models import Resume, ChatHistory
 from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
-    UpdateResumeSerializer,
+    UpdateResumeSerializer, ChatHistorySerializer,
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
@@ -410,3 +410,36 @@ class ChatView(APIView):
 
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
+
+class GetChatHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="채팅 내역 조회",
+        description="채팅 내역을 반환합니다.",
+        responses={
+            200: inline_serializer(
+                name="GetChatHistoryResponse",
+                fields={
+                    "count": serializers.IntegerField(),
+                    "next": serializers.URLField(),
+                    "previous": serializers.URLField(),
+                    "results": ChatHistorySerializer(many=True),
+                },
+            )
+        },
+        parameters=[
+            OpenApiParameter(
+                name="page",
+                type=int,
+                description="페이지 수",
+            ),
+        ]
+    )
+    def get(self, request, pk):
+        resume = get_object_or_404(Resume, pk=pk)
+        queryset = ChatHistory.objects.filter(resume=resume).order_by('-created_at').reverse()
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(queryset, request)
+        serializer = ChatHistorySerializer(result_page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
