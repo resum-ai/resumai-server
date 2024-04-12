@@ -27,7 +27,7 @@ class KakaoTokenSerializer(serializers.Serializer):
 class UserInfoUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("username", "position", "profile_image")
+        fields = ("id", "username", "position", "profile_image")
 
 
 class GetUserInfoSerializer(serializers.ModelSerializer):
