@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 
 from django.http import Http404
 from django.db.models import Q
@@ -386,6 +387,13 @@ class ChatView(APIView):
         },
     )
     def post(self, request, id):
+        user = request.user
+        today = datetime.now().date()
+
+        # 채팅 횟수 count
+        if user.chat_count <= 0:
+            return JsonResponse({"error": "채팅 횟수가 모두 소진되었습니다."}, status=status.HTTP_403_FORBIDDEN)
+
         query = request.data.get("query", "")
 
         resume = get_object_or_404(Resume, pk=id)
@@ -408,6 +416,8 @@ class ChatView(APIView):
             resume=resume, query=query, response=chatbot_response
         )
         new_chat_history.save()
+        user.available_chat_count -= 1
+        user.save()
 
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
