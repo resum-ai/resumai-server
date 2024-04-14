@@ -392,7 +392,10 @@ class ChatView(APIView):
 
         # 채팅 횟수 count
         if user.chat_count <= 0:
-            return JsonResponse({"error": "채팅 횟수가 모두 소진되었습니다."}, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse(
+                {"error": "채팅 횟수가 모두 소진되었습니다."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         query = request.data.get("query", "")
 
