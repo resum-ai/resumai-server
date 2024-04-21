@@ -17,6 +17,7 @@ class PostResumeSerializer(serializers.ModelSerializer):
         fields = (
             "title",
             "position",
+            "company",
             "question",
             "content",
             "due_date",

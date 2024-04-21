@@ -126,6 +126,11 @@ class GenerateResumeView(APIView):
                 description="지원하려는 직무",
             ),
             OpenApiParameter(
+                name="company",
+                type=str,
+                description="지원하려는 기업명",
+            ),
+            OpenApiParameter(
                 name="due_date",
                 type=str,
                 style="date",
@@ -169,6 +174,7 @@ class GenerateResumeView(APIView):
     def post(self, request):
         title = request.data["title"]
         position = request.data["position"]
+        company = request.data["company"]
         due_date = request.data["due_date"]
         question = request.data["question"]
         guidelines = request.data["guidelines"]
@@ -214,6 +220,7 @@ class GenerateResumeView(APIView):
         serializer = PostResumeSerializer(
             data={
                 "title": title,
+                "company": company,
                 "position": position,
                 "question": question,
                 "content": generated_self_introduction,
