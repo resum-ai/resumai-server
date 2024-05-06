@@ -12,7 +12,7 @@
 
 <hr>
 <div align="center">
-    <img width="600"  alt="infra_architecture" src="https://github.com/YAPP-Github/oksusu-susu-api/assets/67852689/0c6760f2-d1be-4125-886c-a4265b74796c">
+    <img width="600" alt="image" src="https://github.com/resum-ai/resumai-server/assets/82500463/f6d49d0e-0b57-429f-bcfa-c3a2dd018fa9">
 </div>
 <br>
 
