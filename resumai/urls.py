@@ -36,10 +36,10 @@ def preprocessing_filter_spec(endpoints):
 urlpatterns = [
     path("", kakao_login_page, name="home"),
     path("admin/", admin.site.urls),
-    path("accounts", include("accounts.urls")),
+    path("accounts/", include("accounts.urls")),
     path("registration/", include("dj_rest_auth.registration.urls")),
-    path("memos", include("memos.urls")),
-    path("resume", include("resume.urls")),
+    path("memos/", include("memos.urls")),
+    path("resume/", include("resume.urls")),
     # swagger 관련
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

@@ -5,6 +5,7 @@ from datetime import datetime
 from django.http import Http404
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,7 +18,7 @@ from typing import List
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
-    OpenApiParameter,
+    OpenApiParameter, OpenApiExample,
 )
 
 from resume.models import Resume, ChatHistory
@@ -113,65 +114,44 @@ class GenerateResumeView(APIView):
     @extend_schema(
         summary="자소서 생성",
         description="답변을 기반으로 자기소개서를 생성합니다.",
-        responses={200: PostResumeSerializer},
-        parameters=[
-            OpenApiParameter(
-                name="title",
-                type=str,
-                description="자소서 제목",
-            ),
-            OpenApiParameter(
-                name="position",
-                type=str,
-                description="지원하려는 직무",
-            ),
-            OpenApiParameter(
-                name="company",
-                type=str,
-                description="지원하려는 기업명",
-            ),
-            OpenApiParameter(
-                name="due_date",
-                type=str,
-                style="date",
-                description='공고 마감기한. 그냥 str 형식으로 "2024-04-10" 이렇게 보내주삼',
-            ),
-            OpenApiParameter(
-                name="question",
-                type=str,
-                description="기업이 제시한 질문",
-            ),
-            OpenApiParameter(
-                name="guidelines",
-                type={"type": "array", "items": {"type": "string"}},
-                location=OpenApiParameter.QUERY,
-                required=False,
-                style="form",
-                explode=False,
-                description="제공된 가이드라인",
-            ),
-            OpenApiParameter(
-                name="answers",
-                type={"type": "array", "items": {"type": "string"}},
-                location=OpenApiParameter.QUERY,
-                required=False,
-                style="form",
-                explode=False,
-                description="제공된 가이드라인에 대한 답변",
-            ),
-            OpenApiParameter(
-                name="free_answer",
-                type=str,
-                description="자유 작성란에 작성한 답변",
-            ),
-            OpenApiParameter(
-                name="favor_info",
-                type=str,
-                description="우대사항",
-            ),
-        ],
+        responses={201: inline_serializer(
+            name='CreateResumeResponse',
+            fields={
+                'id': serializers.IntegerField(help_text='생성된 자소서의 ID')
+            }
+        )},
+        request=GenerateResumeSerializer,
+        examples=[
+            OpenApiExample(
+                request_only=True,
+                name="Example 1",
+                summary="네이버 프론트엔드 엔지니어 지원",
+                value={
+                    "title": "네이버-지원동기",
+                    "position": "프론트엔드 엔지니어",
+                    "company": "네이버",
+                    "due_date": "2024-05-20",
+                    "question": "지원 동기",
+                    "guidelines": [
+                        "이 직무에 관심을 가지게 된 계기",
+                        "이 회사에 관심을 가지게 된 계기",
+                        "해당 직무랑 자신과 잘 어울리는 이유"
+                    ],
+                    "answers": [
+                        "이 직무가 좋아서",
+                        "",
+                        "개발을 잘해서"
+                    ],
+                    "free_answer": "",
+                    "favor_info": "개발을 성실하게 잘하고 인프라 지식이 많으신 분"
+                },
+                description="네이버 프론트엔드 포지션 지원 예제"
+            )
+        ]
     )
     def post(self, request):
+        serializer = GenerateResumeSerializer(data=request.data)
+
         title = request.data["title"]
         position = request.data["position"]
         company = request.data["company"]
@@ -244,40 +224,6 @@ class GenerateResumeView(APIView):
         else:
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class PostResumeView(APIView):
-#     permission_classes = [IsAuthenticated]
-#
-#     @extend_schema(
-#         summary="자기소개서 등록",
-#         description="자기소개서를 등록합니다.",
-#         responses={200: PostResumeSerializer},
-#         request={
-#             "application/json": {
-#                 "type": "object",
-#                 "properties": {
-#                     "title": {"type": "string"},
-#                     "position": {"type": "string"},
-#                     "content": {"type": "string"},
-#                     "due_date": {"type": "string"},
-#                 },
-#             },
-#         },
-#     )
-#     def post(self, request):
-#         serializer = PostResumeSerializer(data=request.data)
-#
-#         # 데이터 유효성 검사
-#         if serializer.is_valid():
-#             # 유효한 데이터의 경우, 자소서 저장
-#             serializer.save(
-#                 user=request.user
-#             )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         else:
-#             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetResumeView(APIView):
