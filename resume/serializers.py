@@ -4,9 +4,13 @@ from resume.models import Resume, ChatHistory
 
 
 class GenerateResumeSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    position = serializers.CharField()
+    company = serializers.CharField()
+    due_date = serializers.CharField()
     question = serializers.CharField()
-    guidelines = serializers.CharField()
-    answers = serializers.CharField()
+    guidelines = serializers.ListField(child=serializers.CharField())
+    answers = serializers.ListField(child=serializers.CharField())
     free_answer = serializers.CharField()
     favor_info = serializers.CharField()
 
