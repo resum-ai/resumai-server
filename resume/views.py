@@ -185,6 +185,7 @@ class GenerateResumeView(APIView):
                 for i, ex in enumerate(examples, start=1)
             ]
         )
+        logging.fatal(examples_str)
 
         # 프롬프트 작성
         prompt = GENERATE_SELF_INTRODUCTION_PROMPT.format(
@@ -196,6 +197,7 @@ class GenerateResumeView(APIView):
 
         # 자소서 생성
         generated_self_introduction = get_chat_openai(prompt)
+        logging.fatal(generated_self_introduction)
 
         serializer = PostResumeSerializer(
             data={
