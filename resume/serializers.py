@@ -7,7 +7,7 @@ class GenerateResumeSerializer(serializers.Serializer):
     title = serializers.CharField()
     position = serializers.CharField()
     company = serializers.CharField()
-    due_date = serializers.DateField(format='%Y-%m-%d')
+    due_date = serializers.DateField(format="%Y-%m-%d")
     question = serializers.CharField()
     guidelines = serializers.ListField(child=serializers.CharField())
     answers = serializers.ListField(child=serializers.CharField())
