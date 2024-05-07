@@ -18,7 +18,8 @@ from typing import List
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
-    OpenApiParameter, OpenApiExample,
+    OpenApiParameter,
+    OpenApiExample,
 )
 
 from resume.models import Resume, ChatHistory
@@ -114,12 +115,12 @@ class GenerateResumeView(APIView):
     @extend_schema(
         summary="자소서 생성",
         description="답변을 기반으로 자기소개서를 생성합니다.",
-        responses={201: inline_serializer(
-            name='CreateResumeResponse',
-            fields={
-                'id': serializers.IntegerField(help_text='생성된 자소서의 ID')
-            }
-        )},
+        responses={
+            201: inline_serializer(
+                name="CreateResumeResponse",
+                fields={"id": serializers.IntegerField(help_text="생성된 자소서의 ID")},
+            )
+        },
         request=GenerateResumeSerializer,
         examples=[
             OpenApiExample(
@@ -135,19 +136,15 @@ class GenerateResumeView(APIView):
                     "guidelines": [
                         "이 직무에 관심을 가지게 된 계기",
                         "이 회사에 관심을 가지게 된 계기",
-                        "해당 직무랑 자신과 잘 어울리는 이유"
+                        "해당 직무랑 자신과 잘 어울리는 이유",
                     ],
-                    "answers": [
-                        "이 직무가 좋아서",
-                        "",
-                        "개발을 잘해서"
-                    ],
+                    "answers": ["이 직무가 좋아서", "", "개발을 잘해서"],
                     "free_answer": "",
-                    "favor_info": "개발을 성실하게 잘하고 인프라 지식이 많으신 분"
+                    "favor_info": "개발을 성실하게 잘하고 인프라 지식이 많으신 분",
                 },
-                description="네이버 프론트엔드 포지션 지원 예제"
+                description="네이버 프론트엔드 포지션 지원 예제",
             )
-        ]
+        ],
     )
     def post(self, request):
         serializer = GenerateResumeSerializer(data=request.data)
@@ -185,7 +182,6 @@ class GenerateResumeView(APIView):
                 for i, ex in enumerate(examples, start=1)
             ]
         )
-        logging.fatal(examples_str)
 
         # 프롬프트 작성
         prompt = GENERATE_SELF_INTRODUCTION_PROMPT.format(
@@ -197,7 +193,6 @@ class GenerateResumeView(APIView):
 
         # 자소서 생성
         generated_self_introduction = get_chat_openai(prompt)
-        logging.fatal(generated_self_introduction)
 
         serializer = PostResumeSerializer(
             data={
