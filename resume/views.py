@@ -138,7 +138,9 @@ class GenerateResumeView(APIView):
                         "해당 직무랑 자신과 잘 어울리는 이유"
                     ],
                     "answers": [
-                        "이 직무가 좋아서", "", "개발을 잘해서"
+                        "이 직무가 좋아서",
+                        "",
+                        "개발을 잘해서"
                     ],
                     "free_answer": "",
                     "favor_info": "개발을 성실하게 잘하고 인프라 지식이 많으신 분"
