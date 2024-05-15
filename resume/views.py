@@ -308,7 +308,7 @@ class ScrapResumeView(APIView):
             resume.is_liked = not resume.is_liked
             resume.save(
                 update_fields=["is_liked"]
-            )  # 업데이트할 필드를 명시적으로 지정합니다.
+            )
 
             return Response(
                 {"id": resume_id, "is_liked": resume.is_liked},
@@ -340,12 +340,12 @@ class ChatView(APIView):
         user = request.user
         today = datetime.now().date()
 
-        # 채팅 횟수 count
-        if user.chat_count <= 0:
-            return JsonResponse(
-                {"error": "채팅 횟수가 모두 소진되었습니다."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        # # 채팅 횟수 count
+        # if user.chat_count <= 0:
+        #     return JsonResponse(
+        #         {"error": "채팅 횟수가 모두 소진되었습니다."},
+        #         status=status.HTTP_403_FORBIDDEN,
+        #     )
 
         query = request.data.get("query", "")
 
@@ -358,19 +358,35 @@ class ChatView(APIView):
             for instance in chat_history_instances
         ]
 
-        if len(chat_history) == 1:
-            query = CHAT_PROMPT.format(query=query)
+        recently_generated_resume = chat_history[-1]["response"]
+
+        # context length 이슈로 chat_memory를 저장하지 못했음.
+        # --> 일단은 모든 채팅을 프롬프트에 본 챗봇이 자기소개서 작성 어시스턴트임을 나타내는 프롬프트 작성
+        # if len(chat_history) == 1:
+        prompted_query = CHAT_PROMPT.format(query=query, recently_generated_resume=recently_generated_resume)
 
         # 챗봇으로부터 응답을 받음
-        chatbot_response = run_llm(query=query, chat_history=chat_history)
+        # chatbot_response = run_llm(query=prompted_query, chat_history=chat_history)
+        chatbot_response = run_llm(query=prompted_query, chat_history=None)
 
         # 새로운 대화 기록을 생성하고 저장
         new_chat_history = ChatHistory(
             resume=resume, query=query, response=chatbot_response
         )
         new_chat_history.save()
-        user.available_chat_count -= 1
+        # user.available_chat_count -= 1
         user.save()
+        # else:
+        #     # 챗봇으로부터 응답을 받음
+        #     chatbot_response = run_llm(query=query, chat_history=chat_history)
+        #
+        #     # 새로운 대화 기록을 생성하고 저장
+        #     new_chat_history = ChatHistory(
+        #         resume=resume, query=query, response=chatbot_response
+        #     )
+        #     new_chat_history.save()
+        #     # user.available_chat_count -= 1
+        #     user.save()
 
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
@@ -387,31 +403,38 @@ class GetChatHistoryView(APIView):
                 name="GetChatHistoryResponse",
                 fields={
                     "count": serializers.IntegerField(),
-                    "next": serializers.URLField(),
-                    "previous": serializers.URLField(),
                     "results": ChatHistorySerializer(many=True),
                 },
             )
         },
-        parameters=[
-            OpenApiParameter(
-                name="page",
-                type=int,
-                description="페이지 수",
-            ),
-        ],
     )
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
-        queryset = (
-            ChatHistory.objects.filter(resume=resume).order_by("-created_at").reverse()
-        )
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = ChatHistorySerializer(
-            result_page, many=True, context={"request": request}
-        )
-        return paginator.get_paginated_response(serializer.data)
+        queryset = ChatHistory.objects.filter(resume=resume).order_by("-created_at").reverse()
+
+        # 첫 번째 항목 제외
+        # queryset = queryset[1:]
+
+        # 새로운 형식으로 데이터를 변환
+        chat_data = []
+        for index, chat in enumerate(queryset):
+            if chat.query and index != 0:
+                chat_data.append({
+                    "created_at": chat.created_at,
+                    "content": chat.query,
+                    "is_user": True
+                })
+            if chat.response:
+                chat_data.append({
+                    "created_at": chat.created_at,
+                    "content": chat.response,
+                    "is_user": False
+                })
+
+        return Response({
+            "count": len(chat_data),
+            "results": chat_data
+        }, status=status.HTTP_200_OK)
 
 
 class DeleteResumeView(APIView):
