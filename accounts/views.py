@@ -21,7 +21,7 @@ from rest_framework import status
 from dj_rest_auth.registration.views import SocialLoginView
 from .serializers import (
     UserInfoUpdateSerializer,
-    GetUserInfoSerializer,
+    GetUserInfoSerializer, KakaoTokenSerializer,
 )
 import logging
 
@@ -56,7 +56,7 @@ def kakao_login(request):
 
 
 class KakaoLoginView(APIView):
-
+    serializer_class = KakaoTokenSerializer
     @extend_schema(
         summary="카카오 로그인 마무리",
         description="code (인가 코드)를 post 요청으로 보내면 access token, 유저 정보를 반환합니다. **(id_token은 불필요합니다.)**",
@@ -177,6 +177,7 @@ class UpdateUserInfoView(APIView):
 
 class GetUserInfoView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = GetUserInfoSerializer
 
     @extend_schema(
         summary="유저 정보 반환",
