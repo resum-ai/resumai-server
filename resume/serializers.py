@@ -19,6 +19,7 @@ class PostResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
         fields = (
+            "id",
             "title",
             "position",
             "company",
