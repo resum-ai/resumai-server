@@ -10,13 +10,14 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-def get_chat_openai(prompt, model="gpt-4"):
+def get_chat_openai(prompt, model="gpt-4o"):
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
         temperature=0,
     )
     output = response.choices[0].message.content
+    print(output)
     return output
 
 
