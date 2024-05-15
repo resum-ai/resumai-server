@@ -27,7 +27,7 @@ from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
     UpdateResumeSerializer,
-    ChatHistorySerializer,
+    ChatHistorySerializer, GuidelineSerializer,
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
@@ -74,6 +74,7 @@ class GetAllResumeView(APIView, PageNumberPagination):
 # Create your views here.
 class GetGuidelinesView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = GuidelineSerializer
 
     @extend_schema(
         summary="가이드라인 생성",

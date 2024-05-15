@@ -2,6 +2,10 @@ from rest_framework import serializers
 
 from resume.models import Resume, ChatHistory
 
+class GuidelineSerializer(serializers.Serializer):
+    result = serializers.ListField(
+        child=serializers.CharField(max_length=200)
+    )
 
 class GenerateResumeSerializer(serializers.Serializer):
     title = serializers.CharField()
