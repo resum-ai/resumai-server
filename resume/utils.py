@@ -22,7 +22,7 @@ def retrieve_similar_answers(user_qa):
         index = pc.Index("resumai-self-introduction-index")
         query_embedding = get_embedding(user_qa)
         retrieved_data = index.query(
-            vector=query_embedding, top_k=3, include_metadata=True
+            vector=query_embedding, top_k=2, include_metadata=True
         )
         return retrieved_data["matches"]
 
@@ -36,9 +36,9 @@ memory = ConversationBufferMemory()
 
 
 def run_llm(query: str, chat_history: list[dict[str, any]]) -> any:
-    for chat in chat_history:
-        memory.save_context(
-            inputs={"human": chat["query"]}, outputs={"ai": chat["response"]}
-        )
-    conversation = ConversationChain(llm=llm, verbose=True, memory=memory)
+    # for chat in chat_history:
+    #     memory.save_context(
+    #         inputs={"human": chat["query"]}, outputs={"ai": chat["response"]}
+    #     )
+    conversation = ConversationChain(llm=llm, verbose=True)
     return conversation.predict(input=query)

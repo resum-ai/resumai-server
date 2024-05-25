@@ -1,9 +1,11 @@
 import json
 import logging
+from datetime import datetime
 
 from django.http import Http404
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,6 +19,7 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
     OpenApiParameter,
+    OpenApiExample,
 )
 
 from resume.models import Resume, ChatHistory
@@ -24,7 +27,7 @@ from resume.serializers import (
     GenerateResumeSerializer,
     PostResumeSerializer,
     UpdateResumeSerializer,
-    ChatHistorySerializer,
+    ChatHistorySerializer, GuidelineSerializer,
 )
 from resume.utils import retrieve_similar_answers, run_llm
 from utils.openai_call import get_chat_openai
@@ -71,6 +74,7 @@ class GetAllResumeView(APIView, PageNumberPagination):
 # Create your views here.
 class GetGuidelinesView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = GuidelineSerializer
 
     @extend_schema(
         summary="가이드라인 생성",
@@ -112,62 +116,43 @@ class GenerateResumeView(APIView):
     @extend_schema(
         summary="자소서 생성",
         description="답변을 기반으로 자기소개서를 생성합니다.",
-        responses={200: PostResumeSerializer},
-        parameters=[
-            OpenApiParameter(
-                name="title",
-                type=str,
-                description="자소서 제목",
-            ),
-            OpenApiParameter(
-                name="position",
-                type=str,
-                description="지원하려는 직무",
-            ),
-            OpenApiParameter(
-                name="due_date",
-                type=str,
-                style="date",
-                description='공고 마감기한. 그냥 str 형식으로 "2024-04-10" 이렇게 보내주삼',
-            ),
-            OpenApiParameter(
-                name="question",
-                type=str,
-                description="기업이 제시한 질문",
-            ),
-            OpenApiParameter(
-                name="guidelines",
-                type={"type": "array", "items": {"type": "string"}},
-                location=OpenApiParameter.QUERY,
-                required=False,
-                style="form",
-                explode=False,
-                description="제공된 가이드라인",
-            ),
-            OpenApiParameter(
-                name="answers",
-                type={"type": "array", "items": {"type": "string"}},
-                location=OpenApiParameter.QUERY,
-                required=False,
-                style="form",
-                explode=False,
-                description="제공된 가이드라인에 대한 답변",
-            ),
-            OpenApiParameter(
-                name="free_answer",
-                type=str,
-                description="자유 작성란에 작성한 답변",
-            ),
-            OpenApiParameter(
-                name="favor_info",
-                type=str,
-                description="우대사항",
-            ),
+        responses={
+            201: inline_serializer(
+                name="CreateResumeResponse",
+                fields={"id": serializers.IntegerField(help_text="생성된 자소서의 ID")},
+            )
+        },
+        request=GenerateResumeSerializer,
+        examples=[
+            OpenApiExample(
+                request_only=True,
+                name="Example 1",
+                summary="네이버 프론트엔드 엔지니어 지원",
+                value={
+                    "title": "네이버-지원동기",
+                    "position": "프론트엔드 엔지니어",
+                    "company": "네이버",
+                    "due_date": "2024-05-20",
+                    "question": "지원 동기",
+                    "guidelines": [
+                        "이 직무에 관심을 가지게 된 계기",
+                        "이 회사에 관심을 가지게 된 계기",
+                        "해당 직무랑 자신과 잘 어울리는 이유",
+                    ],
+                    "answers": ["이 직무가 좋아서", "", "개발을 잘해서"],
+                    "free_answer": "",
+                    "favor_info": "개발을 성실하게 잘하고 인프라 지식이 많으신 분",
+                },
+                description="네이버 프론트엔드 포지션 지원 예제",
+            )
         ],
     )
     def post(self, request):
+        serializer = GenerateResumeSerializer(data=request.data)
+
         title = request.data["title"]
         position = request.data["position"]
+        company = request.data["company"]
         due_date = request.data["due_date"]
         question = request.data["question"]
         guidelines = request.data["guidelines"]
@@ -213,6 +198,7 @@ class GenerateResumeView(APIView):
         serializer = PostResumeSerializer(
             data={
                 "title": title,
+                "company": company,
                 "position": position,
                 "question": question,
                 "content": generated_self_introduction,
@@ -236,40 +222,6 @@ class GenerateResumeView(APIView):
         else:
             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class PostResumeView(APIView):
-#     permission_classes = [IsAuthenticated]
-#
-#     @extend_schema(
-#         summary="자기소개서 등록",
-#         description="자기소개서를 등록합니다.",
-#         responses={200: PostResumeSerializer},
-#         request={
-#             "application/json": {
-#                 "type": "object",
-#                 "properties": {
-#                     "title": {"type": "string"},
-#                     "position": {"type": "string"},
-#                     "content": {"type": "string"},
-#                     "due_date": {"type": "string"},
-#                 },
-#             },
-#         },
-#     )
-#     def post(self, request):
-#         serializer = PostResumeSerializer(data=request.data)
-#
-#         # 데이터 유효성 검사
-#         if serializer.is_valid():
-#             # 유효한 데이터의 경우, 자소서 저장
-#             serializer.save(
-#                 user=request.user
-#             )  # 현재 로그인한 사용자를 메모의 user 필드에 저장
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         else:
-#             # 데이터가 유효하지 않은 경우, 에러 메시지 반환
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetResumeView(APIView):
@@ -357,7 +309,7 @@ class ScrapResumeView(APIView):
             resume.is_liked = not resume.is_liked
             resume.save(
                 update_fields=["is_liked"]
-            )  # 업데이트할 필드를 명시적으로 지정합니다.
+            )
 
             return Response(
                 {"id": resume_id, "is_liked": resume.is_liked},
@@ -386,6 +338,16 @@ class ChatView(APIView):
         },
     )
     def post(self, request, id):
+        user = request.user
+        today = datetime.now().date()
+
+        # # 채팅 횟수 count
+        # if user.chat_count <= 0:
+        #     return JsonResponse(
+        #         {"error": "채팅 횟수가 모두 소진되었습니다."},
+        #         status=status.HTTP_403_FORBIDDEN,
+        #     )
+
         query = request.data.get("query", "")
 
         resume = get_object_or_404(Resume, pk=id)
@@ -397,17 +359,35 @@ class ChatView(APIView):
             for instance in chat_history_instances
         ]
 
-        if len(chat_history) == 1:
-            query = CHAT_PROMPT.format(query=query)
+        recently_generated_resume = chat_history[-1]["response"]
+
+        # context length 이슈로 chat_memory를 저장하지 못했음.
+        # --> 일단은 모든 채팅을 프롬프트에 본 챗봇이 자기소개서 작성 어시스턴트임을 나타내는 프롬프트 작성
+        # if len(chat_history) == 1:
+        prompted_query = CHAT_PROMPT.format(query=query, recently_generated_resume=recently_generated_resume)
 
         # 챗봇으로부터 응답을 받음
-        chatbot_response = run_llm(query=query, chat_history=chat_history)
+        # chatbot_response = run_llm(query=prompted_query, chat_history=chat_history)
+        chatbot_response = run_llm(query=prompted_query, chat_history=None)
 
         # 새로운 대화 기록을 생성하고 저장
         new_chat_history = ChatHistory(
             resume=resume, query=query, response=chatbot_response
         )
         new_chat_history.save()
+        # user.available_chat_count -= 1
+        user.save()
+        # else:
+        #     # 챗봇으로부터 응답을 받음
+        #     chatbot_response = run_llm(query=query, chat_history=chat_history)
+        #
+        #     # 새로운 대화 기록을 생성하고 저장
+        #     new_chat_history = ChatHistory(
+        #         resume=resume, query=query, response=chatbot_response
+        #     )
+        #     new_chat_history.save()
+        #     # user.available_chat_count -= 1
+        #     user.save()
 
         # 챗봇의 응답을 반환
         return JsonResponse({"answer": chatbot_response}, status=status.HTTP_200_OK)
@@ -424,31 +404,38 @@ class GetChatHistoryView(APIView):
                 name="GetChatHistoryResponse",
                 fields={
                     "count": serializers.IntegerField(),
-                    "next": serializers.URLField(),
-                    "previous": serializers.URLField(),
                     "results": ChatHistorySerializer(many=True),
                 },
             )
         },
-        parameters=[
-            OpenApiParameter(
-                name="page",
-                type=int,
-                description="페이지 수",
-            ),
-        ],
     )
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
-        queryset = (
-            ChatHistory.objects.filter(resume=resume).order_by("-created_at").reverse()
-        )
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = ChatHistorySerializer(
-            result_page, many=True, context={"request": request}
-        )
-        return paginator.get_paginated_response(serializer.data)
+        queryset = ChatHistory.objects.filter(resume=resume).order_by("-created_at").reverse()
+
+        # 첫 번째 항목 제외
+        # queryset = queryset[1:]
+
+        # 새로운 형식으로 데이터를 변환
+        chat_data = []
+        for index, chat in enumerate(queryset):
+            if chat.query and index != 0:
+                chat_data.append({
+                    "created_at": chat.created_at,
+                    "content": chat.query,
+                    "is_user": True
+                })
+            if chat.response:
+                chat_data.append({
+                    "created_at": chat.created_at,
+                    "content": chat.response,
+                    "is_user": False
+                })
+
+        return Response({
+            "count": len(chat_data),
+            "results": chat_data
+        }, status=status.HTTP_200_OK)
 
 
 class DeleteResumeView(APIView):

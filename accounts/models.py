@@ -25,6 +25,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)  # 계정 활성화 상태
     created_at = models.DateTimeField(auto_now_add=True)
 
+    available_chat_count = models.IntegerField(default=5)
+    reset_chat_date = models.DateField(null=True, blank=True)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
