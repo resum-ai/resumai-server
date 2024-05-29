@@ -37,7 +37,7 @@ env.read_env(env_file)
 
 BASE_URL = env("BASE_URL")
 # KAKAO_CALLBACK_URI = BASE_URL + "accounts/kakao/callback/"
-KAKAO_CALLBACK_URI = "https://resumai-client.vercel.app/accounts/kakao/callback"
+KAKAO_CALLBACK_URI = "https://resumai.kr/accounts/kakao/callback"
 # KAKAO_CALLBACK_URI = "http://localhost:5173/accounts/kakao/callback"
 # KAKAO_CALLBACK_URI = "http://api.resumai.kr/accounts/kakao/callback/"
 REST_API_KEY = env("KAKAO_REST_API_KEY")
