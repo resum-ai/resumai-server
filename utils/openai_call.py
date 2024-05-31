@@ -17,7 +17,6 @@ def get_chat_openai(prompt, model="gpt-4o"):
         temperature=0,
     )
     output = response.choices[0].message.content
-    print(output)
     return output
 
 
