@@ -1,11 +1,8 @@
 import json
-import logging
 from datetime import datetime
 
 from django.http import Http404
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,7 +10,6 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import serializers
 from django.http import JsonResponse
-from typing import List
 
 from drf_spectacular.utils import (
     extend_schema,
@@ -79,14 +75,6 @@ class GetGuidelinesView(APIView):
     @extend_schema(
         summary="가이드라인 생성",
         description="질문을 기반으로 가이드라인을 생성합니다.",
-        # responses={
-        #     200: inline_serializer(
-        #         name="GetGuidelineResponse",
-        #         fields={
-        #             "results": ['guide1', 'guide2', 'guide3']
-        #         }
-        #     )
-        # },
         parameters=[
             OpenApiParameter(
                 name="question",
@@ -258,7 +246,7 @@ class UpdateResumeView(APIView):
     )
     def put(self, request, *args, **kwargs):
         user = request.user
-        resume_id = kwargs.get("id")  # URL에서 resume의 id를 가져옵니다.
+        resume_id = kwargs.get("id")
 
         try:
             resume = Resume.objects.get(
@@ -297,7 +285,7 @@ class ScrapResumeView(APIView):
         },
     )
     def get(self, request, *args, **kwargs):
-        resume_id = kwargs.get("id", None)  # URL로부터 자기소개서 id를 받아옵니다.
+        resume_id = kwargs.get("id", None)
         if not resume_id:
             return Response(
                 {"error": "Resume ID is required"}, status=status.HTTP_400_BAD_REQUEST
@@ -305,7 +293,7 @@ class ScrapResumeView(APIView):
 
         try:
             resume = Resume.objects.get(id=resume_id)
-            # is_liked 필드의 값을 반전시킵니다.
+            # is_liked 필드 값 반전
             resume.is_liked = not resume.is_liked
             resume.save(
                 update_fields=["is_liked"]
