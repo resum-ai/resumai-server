@@ -31,7 +31,7 @@ def retrieve_similar_answers(user_qa):
         return []
 
 
-llm = ChatOpenAI(verbose=True, temperature=0, model_name="gpt-4")
+llm = ChatOpenAI(verbose=True, temperature=0, model_name="gpt-4o")
 memory = ConversationBufferMemory()
 
 
